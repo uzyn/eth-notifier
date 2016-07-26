@@ -17,7 +17,7 @@ module.exports = {
   },
   web3Loader: {
     constructorParams: {
-      MyToken: [ 250000, 'The Coin', 2, 'TC$', '1.0.0' ],
+      MyToken: [250000, 'The Coin', 2, 'TC$', '1.0.0'],
     }
   },
   plugins: [
