@@ -6,7 +6,9 @@
     "start": "webpack-dev-server --inline --content-base build/",
     "lint": "eslint --ext=js --ext=jsx --ignore-path .gitignore .",
     "build": "webpack",
-    "test": "mocha-webpack"
+    "test": "mocha-webpack",
+
+    "build-server": "webpack --config webpack.config.server.js"
   },
   "repository": {
     "type": "git",
