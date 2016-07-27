@@ -1,25 +1,4 @@
-# React Ethereum Dapp Template 
-
-[![Build Status](https://travis-ci.org/uzyn/react-ethereum-dapp-template.svg?branch=master)](https://travis-ci.org/uzyn/react-ethereum-dapp-template)
-
-Template for React-based Ethereum decentralized app (Dapp). 
-
-This is an **opinionated version** of [ethereum-webpack-example-dapp](https://github.com/uzyn/ethereum-webpack-example-dapp) and largely intended for personal use, unless you share the same opinion as mine.
-
-It is largely a combination of:
-
-- [react-webpack-airbnbjs-boilerplate](https://github.com/uzyn/react-webpack-airbnbjs-boilerplate), and
-- [ethereum-webpack-example-dapp](https://github.com/uzyn/ethereum-webpack-example-dapp)
-
-## What does this include
-
-- Webpack build script with Webpack dev server
-- ES2015/ES6
-- ESlint for ES2015 using Airbnb JS style guide
-- React for front-end view
-- Solidity for Ethereum smart contracts
-- Test suite for smart contract testing
-
+# ETH Notifier
 
 ## How to run
 
@@ -39,6 +18,25 @@ It is largely a combination of:
   ```bash
   npm install
   ```
+
+1. Generate server contracts helper
+
+  ```bash
+  npm run build-server
+
+  # or, with watch
+  npm run build-server -- --watch
+  ```
+
+1. Run server
+
+  ```bash
+  node server/
+  ```
+
+### User interface (web-based app)
+
+**There are no web-based UI yet**
 
 1. Start the dev server, code and enjoy! Browser should automatically refresh if you make any changes to the code.
 

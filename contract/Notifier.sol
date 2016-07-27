@@ -5,7 +5,7 @@ contract Notifier {
   event Notify(Transport transport);
 
   function Notifier() {
-
+    // asd
   }
 
 }
