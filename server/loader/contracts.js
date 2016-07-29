@@ -1,6 +1,6 @@
 import { Notifier, web3 } from '../../contract/Notifier.sol';
 
-export default {
+module.exports = {
   Notifier,
   web3,
 };
