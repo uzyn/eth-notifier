@@ -1,7 +1,7 @@
 {
-  "name": "react-ethereum-dapp-template",
-  "version": "0.0.1",
-  "description": "Template for Ethereum Dapp based on React with test suite",
+  "name": "eth-notifier",
+  "version": "0.1.0",
+  "description": "An Ethereum smart contract that delivers notification on call.",
   "scripts": {
     "start": "webpack-dev-server --inline --content-base build/",
     "lint": "eslint --ext=js --ext=jsx --ignore-path .gitignore .",
@@ -12,7 +12,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/uzyn/react-ethereum-dapp-template.git"
+    "url": "https://github.com/uzyn/eth-notifier.git"
   },
   "author": "U-Zyn Chua <chua@uzyn.com>",
   "license": "UNLICENSED",

@@ -1,5 +1,12 @@
 # ETH Notifier
 
+An Ethereum smart contract that delivers notification on call.
+
+Callable by any external contracts.
+
+Contract on main chain: _(TBA)_
+
+
 ## How to run
 
 1. Run a local Ethereum node with JSON-RPC listening at port 8545 _(default)_. [testrpc](https://github.com/ethereumjs/testrpc) would be the most straight-forward method.
