@@ -11,18 +11,21 @@ contract Notifier is owned {
   }
 
   //Task[] public tasks;
-  mapping(bytes4 => Task) public tasks;
+  mapping(uint => Task) public tasks;
   uint public tasksCount = 0;
 
-  event TaskUpdated(bytes4 taskId, uint8 state, uint8 transport);
+  /**
+   * Events to be picked up by API
+   */
+  event TaskUpdated(uint taskId, uint8 state, uint8 transport);
 
   function Notifier() {
     ownersCount++;
     owners[msg.sender] = true;
   }
 
-  function notifyPls(string _destination, string _message) {
-    bytes4 id = msg.sig;
+  function notify(string _destination, string _message) {
+    uint id = tasksCount;
     tasks[id] = Task({
       transport: 1, // sms
       sender: msg.sender,

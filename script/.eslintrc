@@ -1,0 +1,9 @@
+{
+  "rules": {
+    "new-cap": "off",
+    "no-console": "off"
+  },
+  "env": {
+    "node": true
+  }
+}
