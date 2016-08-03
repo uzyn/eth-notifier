@@ -3,9 +3,9 @@ const sms = require('./sms');
 // const accounts = web3.eth.accounts;
 
 Notifier.TaskUpdated().watch((err, event) => {
-  console.log(event);
   if (err || !event.args.taskId || !event.args.state) {
-    return console.log(err);
+    console.log(err);
+    return false;
   }
 
   const state = event.args.state.toNumber();
@@ -17,6 +17,8 @@ Notifier.TaskUpdated().watch((err, event) => {
       console.log(data);
     }, sendErr => console.log(sendErr));
   }
+
+  return true;
 });
 
 /*

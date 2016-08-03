@@ -1,6 +1,7 @@
 import "library/owned.sol";
+import "library/accountSupported.sol";
 
-contract Notifier is owned {
+contract Notifier is owned, accountSupported {
 
   struct Task {
     uint8 transport; // 1: sms
@@ -24,7 +25,7 @@ contract Notifier is owned {
     owners[msg.sender] = true;
   }
 
-  function notify(string _destination, string _message) {
+  function notify(string _destination, string _message) handleDeposit {
     uint id = tasksCount;
     tasks[id] = Task({
       transport: 1, // sms
