@@ -95,14 +95,14 @@ contract withAccounts is owned {
 
 /**
  * ----------------------
- * PRIVATE FUNCTIONS
+ * INTERNAL FUNCTIONS
  * ----------------------
  */
 
   /**
    * Deposit funds into account
    */
-  function deposit(address _user, uint _amount) private {
+  function deposit(address _user, uint _amount) internal {
     if (_amount <= 0) {
       throw;
     }
@@ -114,7 +114,7 @@ contract withAccounts is owned {
   /**
    * Creates a transaction and hold the funds for _timeoutPeriod
    */
-  function createTx(address _user, uint _amount, uint _timeoutPeriod) private returns (uint txid) {
+  function createTx(address _user, uint _amount, uint _timeoutPeriod) internal returns (uint txid) {
     if (_amount > availableBalances[_user]) {
       throw;
     }
@@ -145,7 +145,7 @@ contract withAccounts is owned {
     return txid;
   }
 
-  function settle(uint _txid, uint _amountSpent) private {
+  function settle(uint _txid, uint _amountSpent) internal {
     if (accountTxs[_txid].state != 1 || _amountSpent > accountTxs[_txid].amountHeld) {
       throw;
     }
