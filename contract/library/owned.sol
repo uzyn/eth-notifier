@@ -9,7 +9,7 @@ contract owned {
     _
   }
 
-  function addOwner(address _candidate) onlyOwner {
+  function addOwner(address _candidate) public onlyOwner {
     if (owners[_candidate] == true) {
       throw; // already owner
     }
@@ -18,7 +18,7 @@ contract owned {
     ++ownersCount;
   }
 
-  function removeOwner(address _candidate) onlyOwner {
+  function removeOwner(address _candidate) public onlyOwner {
     // Stop removing the only/last owner
     if (ownersCount <= 1 || owners[_candidate] == false) {
       throw;

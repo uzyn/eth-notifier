@@ -1,4 +1,6 @@
-contract withAccounts {
+import "./owned.sol";
+
+contract withAccounts is owned {
   uint defaultTimeoutPeriod = 1 weeks; // if locked fund is not settled in a week, automatically refund user
 
   struct AccountTx {
@@ -32,6 +34,30 @@ contract withAccounts {
     }
     _
   }
+
+  /**
+   * Owner - collect spentBalance
+   * leave blank at _amount to collect all spentBalance
+   */
+  function collect(uint _amount) public onlyOwner {
+    if (_amount == 0) {
+      _amount = spentBalance;
+    }
+    if (_amount > spentBalance) {
+      throw;
+    }
+
+    spentBalance -= _amount;
+    if (!msg.sender.call.value(_amount)()) {
+      throw;
+    }
+  }
+
+/**
+ * ----------------------
+ * PRIVATE FUNCTIONS
+ * ----------------------
+ */
 
   /**
    * Deposit funds into account
@@ -80,7 +106,7 @@ contract withAccounts {
   }
 
   function settle(uint _txid, uint _amountSpent) private {
-    if (accountTxs[_txid].state != 1 || _amountSpent > accountTxs[_txid].amount) {
+    if (accountTxs[_txid].state != 1 || _amountSpent > accountTxs[_txid].amountHeld) {
       throw;
     }
 

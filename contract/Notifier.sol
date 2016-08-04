@@ -20,12 +20,12 @@ contract Notifier is owned, withAccounts {
    */
   event TaskUpdated(uint taskId, uint8 state, uint8 transport);
 
-  function Notifier() {
+  function Notifier() public {
     ownersCount++;
     owners[msg.sender] = true;
   }
 
-  function notify(string _destination, string _message) handleDeposit {
+  function notify(string _destination, string _message) public handleDeposit {
     uint id = tasksCount;
     tasks[id] = Task({
       transport: 1, // sms
