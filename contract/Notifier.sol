@@ -1,7 +1,7 @@
 import "library/owned.sol";
-import "library/accountSupported.sol";
+import "library/withAccounts.sol";
 
-contract Notifier is owned, accountSupported {
+contract Notifier is owned, withAccounts {
 
   struct Task {
     uint8 transport; // 1: sms
