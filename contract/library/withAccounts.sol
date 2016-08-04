@@ -35,6 +35,46 @@ contract withAccounts is owned {
     _
   }
 
+/**
+ * ----------------------
+ * PUBLIC FUNCTIONS
+ * ----------------------
+ */
+
+  /**
+   * Account owner withdraw funds
+   * leave blank at _amount to collect all funds on user's account
+   */
+  function withdraw(uint _amount) public {
+    if (_amount == 0) {
+      _amount = availableBalances[msg.sender];
+    }
+    if (_amount > availableBalances[msg.sender]) {
+      throw;
+    }
+
+    availableBalances[msg.sender] -= _amount;
+    if (!msg.sender.call.value(_amount)()) {
+      throw;
+    }
+  }
+
+  /**
+   * Checks if an AccountTx is timed out
+   * can be called by anyone, not only account owner or provider
+   * If an AccountTx is already timed out, return balance to the user's available balance.
+   */
+  function checkTimeout(uint _txid) public {
+    if (
+      accountTxs[_txid].state != 1 ||
+      (now - accountTxs[_txid].timeCreated) < accountTxs[_txid].timeoutPeriod
+    ) {
+      throw;
+    }
+
+    settle(_txid, 0); // no money is spent, settle the tx
+  }
+
   /**
    * Owner - collect spentBalance
    * leave blank at _amount to collect all spentBalance
@@ -114,6 +154,7 @@ contract withAccounts is owned {
     // because if provider has actual update, it should stand
 
     accountTxs[_txid].amountSpent = _amountSpent;
+    accountTxs[_txid].timeSettled = now;
     accountTxs[_txid].state = 2; // processed and refunded;
 
     spentBalance += _amountSpent;
