@@ -42,6 +42,14 @@ contract withAccounts is owned {
  */
 
   /**
+   * Checks available balance
+   */
+  function getBalance() constant public returns (uint balance) {
+    balance = availableBalances[msg.sender];
+    return balance;
+  }
+
+  /**
    * Account owner withdraw funds
    * leave blank at _amount to collect all funds on user's account
    */

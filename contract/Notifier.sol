@@ -17,7 +17,6 @@ contract Notifier is owned, withAccounts {
                  // 60: rejected or error-ed, costing done, tx settled
   }
 
-  //Task[] public tasks;
   mapping(uint => Task) public tasks;
   uint public tasksCount = 0;
 
@@ -100,9 +99,8 @@ contract Notifier is owned, withAccounts {
   }
 
   /**
-   * Prevents accidental sending of ether
+   * Handle deposits
    */
-  function () {
-    throw;
+  function () handleDeposit {
   }
 }
