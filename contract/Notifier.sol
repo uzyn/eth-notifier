@@ -96,6 +96,7 @@ contract Notifier is owned, withAccounts {
     if (_state >= 50) {
       settle(tasks[_taskId].txid, _cost);
     }
+    TaskUpdated(_taskId, _state, tasks[_taskId].transport);
   }
 
   /**

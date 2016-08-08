@@ -6,9 +6,9 @@ const accounts = web3.eth.accounts;
 
 Notifier.notify(
   '+6598318407',
-  `Hello from blockchain - ${new Date().toISOString()}`,
+  `Hello from blockchain. This message is initiated on ${new Date().toISOString()}.`,
   {
     from: accounts[2],
-    value: web3.toWei(0.01, 'ether'),
+    value: web3.toWei(0.1, 'ether'),
   }
 );
