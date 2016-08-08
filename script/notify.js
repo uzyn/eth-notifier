@@ -9,6 +9,6 @@ Notifier.notify(
   `Hello from blockchain. This message is initiated on ${new Date().toISOString()}.`,
   {
     from: accounts[2],
-    value: web3.toWei(0.1, 'ether'),
+    value: web3.toWei(0.2, 'ether'),
   }
 );
