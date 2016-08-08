@@ -28,4 +28,5 @@ node_modules
 .tmp
 
 # App
+/serverdb.sqlite3
 /config/local.js

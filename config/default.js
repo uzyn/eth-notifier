@@ -17,5 +17,10 @@ module.exports = {
     accountSid: 'xxxxxxxxxxxxxxxxxxxxxxx',
     authToken: 'xxxxxxxxxxxxxxxxxxxxxxx',
     messagingServiceSid: 'xxxxxxxxxxxxxxxxxxxxxxx',
+    maxUsdPerSms: 0.5, // This should be less than the amount withhold by Notifier.sol
+  },
+  server: {
+    sqliteDatabase: './serverdb.sqlite3',
+    ethUsd: 15, // 1 ETH = ? USD
   },
 };

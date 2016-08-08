@@ -15,6 +15,7 @@ function send(destination, message) {
       messagingServiceSid,
       to: destination,
       body: message,
+      maxPrice: config.get('twilio.maxUsdPerSms'),
     }, (err, data) => {
       if (err) {
         return reject(err);
