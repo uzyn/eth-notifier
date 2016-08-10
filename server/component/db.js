@@ -17,6 +17,8 @@ db.serialize(() => {
     awaitingStatus BOOL
   )`);
   db.run('CREATE INDEX IF NOT EXISTS awaitingStatusIdx ON sms(awaitingStatus)');
+  db.run('CREATE INDEX IF NOT EXISTS twilioSidIdx ON sms(twilioSid)');
+  db.run('CREATE INDEX IF NOT EXISTS txidIdx ON sms(txid)');
 });
 
 /**
@@ -45,8 +47,20 @@ function msgSent(taskid, txid, twilioSid) {
  * Obtained prices, update table
  * Note: this does not deal with ETH refund
  */
-function updatePricing(taskid, twilioUSD, ethCharged) {
-//  return new Promise
+function setFinalPrice(taskid, twilioUSD, ethCharged) {
+  console.log('HERE!!!!!!!!!');
+  return new Promise((resolve, reject) => {
+    db.run(`UPDATE sms SET
+      twilioUSD = ${twilioUSD},
+      ethCharged = ${ethCharged},
+      awaitingStatus = 0
+    WHERE taskid = ${taskid};`, (err, data) => {
+      if (err) {
+        return reject(err);
+      }
+      return resolve(data);
+    });
+  });
 }
 
 /**
@@ -66,6 +80,6 @@ function getAllWithoutPricing() {
 
 module.exports = {
   msgSent,
-  updatePricing,
+  setFinalPrice,
   getAllWithoutPricing,
 };

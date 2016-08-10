@@ -81,7 +81,7 @@ contract Notifier is owned, withAccounts {
    * Mark task as rejected or error-ed,  and processed funds + costings
    * This is a FINAL state
    */
-  function taskProcessed(uint _taskId, uint _cost) public onlyOwner {
+  function taskRejected(uint _taskId, uint _cost) public onlyOwner {
     updateState(_taskId, 60, _cost);
   }
 

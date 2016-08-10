@@ -1,6 +1,7 @@
-const { Notifier } = require('../build/.server/contracts.js');
-const sms = require('./component/sms');
+const { Notifier, web3 } = require('../build/.server/contracts.js');
+const config = require('config');
 const db = require('./component/db');
+const sms = require('./component/sms');
 // const accounts = web3.eth.accounts;
 
 Notifier.TaskUpdated().watch((err, event) => {
@@ -29,17 +30,51 @@ Notifier.TaskUpdated().watch((err, event) => {
   return true;
 });
 
+function processRefund(dbRow, usdPrice) {
+  console.log(dbRow, usdPrice);
+  console.log('wwwwwwwwwwwwwwwwwwwww');
+  console.log(config.get('server.ethUsd'));
+  const ethPrice = usdPrice / config.get('server.ethUsd');
+  console.log('ddddddddddddddddddddddd');
+    console.log(dbRow.txid, ethPrice);
+  return new Promise((resolve, reject) => {
+    console.log('ssssssssssssssssssssssssssss');
+    console.log(dbRow.txid, ethPrice);
+    Notifier.taskProcessedWithCosting(dbRow.txid, ethPrice, {
+      from: web3.eth.accounts[config.get('ethereum.adminAccount')],
+    }, err => {
+      console.log(err);
+      if (err) {
+        return reject(err);
+      }
+      return db.setFinalPrice(dbRow.taskid, usdPrice, ethPrice);
+    });
+  });
+}
+
 function checkStatuses() {
-  db.getAllWithoutPricing().then(data => {
-    console.log('=> ', data);
-  }, err => { console.log(err) });
+  let dbRows;
+  db.getAllWithoutPricing().then(rows => {
+    dbRows = rows;
+    const twilioSids = rows.map(row => row.twilioSid);
+    return sms.statuses(twilioSids);
+  }).then(statuses => {
+    statuses.forEach(status => {
+      if (status.price_unit !== 'USD') {
+        console.log(`Unknown price unit returned from Twilio – ${status.price_unit}`);
+      }
+      const dbRow = dbRows.find(row => row.twilioSid === status.sid);
+      processRefund(dbRow, Math.abs(parseFloat(status.price)));
+    });
+  });
 }
 
 checkStatuses();
+/*
 setInterval(() => {
   checkStatuses();
 }, 1000);
-
+*/
 /*
 function getTask(taskID) {
   return new Promise((resolve, reject) => {

@@ -21,6 +21,9 @@ module.exports = {
   },
   server: {
     sqliteDatabase: './serverdb.sqlite3',
-    ethUsd: 15, // 1 ETH = ? USD
+    ethUsd: 10, // 1 ETH = ? USD
+  },
+  ethereum: {
+    adminAccount: 0, // i-th account in web3 is admin account
   },
 };

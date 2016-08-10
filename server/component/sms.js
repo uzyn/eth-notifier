@@ -26,16 +26,32 @@ function send(destination, message) {
 }
 
 /**
- * Get status of a message
+ * Get status(es) of a message(s)
  * mainly to get delivery status and pricing
  */
-function status(twilioSid) {
-  //twilio.messages(
-  //console.log(
-  console.log('status', twilioSid);
+function statuses(twilioSids) {
+  let twilioSidsArray;
+  if (typeof twilioSids === 'string') {
+    twilioSidsArray = [twilioSids];
+  } else {
+    twilioSidsArray = twilioSids;
+  }
+
+  const promises = twilioSidsArray.map(twilioSid =>
+    new Promise((resolve) => { // do not reject, just resolve(null)
+      console.log(`Enquiring ${twilioSid}`);
+      twilio.messages(twilioSid).get((err, message) => {
+        if (err) {
+          return resolve(null); // do not reject
+        }
+        return resolve(message);
+      });
+    })
+  );
+  return Promise.all(promises);
 }
 
-module.exports = { send, status };
+module.exports = { send, statuses };
 
 // send('+6598318407', 'hello from blockchain');
 
