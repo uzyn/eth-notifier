@@ -16,6 +16,7 @@ db.serialize(() => {
     ethCharged NUMERIC,
     awaitingStatus BOOL
   )`);
+  db.run('CREATE INDEX IF NOT EXISTS awaitingStatusIdx ON sms(awaitingStatus)');
 });
 
 /**
@@ -45,6 +46,7 @@ function msgSent(taskid, txid, twilioSid) {
  * Note: this does not deal with ETH refund
  */
 function updatePricing(taskid, twilioUSD, ethCharged) {
+//  return new Promise
 }
 
 /**
@@ -52,9 +54,18 @@ function updatePricing(taskid, twilioUSD, ethCharged) {
  * in order to query Twilio about it
  */
 function getAllWithoutPricing() {
-
+  return new Promise((resolve, reject) => {
+    db.all('SELECT * FROM sms WHERE awaitingStatus = 1', (err, data) => {
+      if (err) {
+        return reject(err);
+      }
+      return resolve(data);
+    });
+  });
 }
 
 module.exports = {
   msgSent,
+  updatePricing,
+  getAllWithoutPricing,
 };

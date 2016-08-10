@@ -18,8 +18,8 @@ Notifier.TaskUpdated().watch((err, event) => {
 
     sms.send(destination, message).then(twilioData =>
       db.msgSent(event.args.taskId, txid, twilioData.sid)
-    ).then(dbData => {
-      console.log(dbData);
+    ).then(() => {
+      console.log(`Message sent to ${destination}.`);
     }, promiseErr => {
       // TODO: Return (unwithhold) user's funds
       console.log(promiseErr);
@@ -28,6 +28,17 @@ Notifier.TaskUpdated().watch((err, event) => {
 
   return true;
 });
+
+function checkStatuses() {
+  db.getAllWithoutPricing().then(data => {
+    console.log('=> ', data);
+  }, err => { console.log(err) });
+}
+
+checkStatuses();
+setInterval(() => {
+  checkStatuses();
+}, 1000);
 
 /*
 function getTask(taskID) {

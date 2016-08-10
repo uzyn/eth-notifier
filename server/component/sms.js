@@ -25,7 +25,17 @@ function send(destination, message) {
   });
 }
 
-module.exports = { send };
+/**
+ * Get status of a message
+ * mainly to get delivery status and pricing
+ */
+function status(twilioSid) {
+  //twilio.messages(
+  //console.log(
+  console.log('status', twilioSid);
+}
+
+module.exports = { send, status };
 
 // send('+6598318407', 'hello from blockchain');
 
