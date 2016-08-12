@@ -10,7 +10,7 @@ const params = [
   `Hello from blockchain. This message is initiated on ${new Date().toISOString()}.`,
   {
     from: accounts[3],
-    value: web3.toWei(0.25, 'ether'),
+    value: web3.toWei(0.06, 'ether'),
   },
 ];
 

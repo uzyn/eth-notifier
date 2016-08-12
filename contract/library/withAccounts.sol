@@ -16,7 +16,7 @@ contract withAccounts is owned {
 
   uint public txCount = 0;
   mapping (uint => AccountTx) public accountTxs;
-  mapping (address => uint) public userTxs;
+  //mapping (address => uint) public userTxs;
 
   /**
    * Handling user account funds
@@ -141,7 +141,7 @@ contract withAccounts is owned {
       amountSpent: 0,
       state: 1 // on hold
     });
-    userTxs[_user] = txid;
+    //userTxs[_user] = txid;
     ++txCount;
 
     availableBalances[_user] -= _amount;

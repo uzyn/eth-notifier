@@ -48,7 +48,6 @@ function msgSent(taskid, txid, twilioSid) {
  * Note: this does not deal with ETH refund
  */
 function setFinalPrice(taskid, twilioUSD, ethCharged) {
-  console.log('HERE!!!!!!!!!');
   return new Promise((resolve, reject) => {
     db.run(`UPDATE sms SET
       twilioUSD = ${twilioUSD},

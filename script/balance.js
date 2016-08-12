@@ -10,7 +10,6 @@ console.log(`Spent balance (earned revenue):\t\t${inEth(Notifier.spentBalance())
 console.log();
 
 console.log('[ Ethereum wallets ]');
-
 for (const account of accounts) {
   let onholdStr = '';
   if (Notifier.onholdBalances(account).toNumber() > 0) {

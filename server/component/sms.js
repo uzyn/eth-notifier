@@ -52,16 +52,3 @@ function statuses(twilioSids) {
 }
 
 module.exports = { send, statuses };
-
-// send('+6598318407', 'hello from blockchain');
-
-/*
-twilio.sendMessage({
-  messagingServiceSid,
-  to: '+6598318407',
-  body: 'hello from twilio',
-}, (err, message) => {
-  console.log(err);
-  console.log(message);
-});
-*/

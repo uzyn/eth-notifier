@@ -8,7 +8,6 @@ const { Notifier, web3 } = require('../build/.server/contracts.js');
 const config = require('config');
 const db = require('./component/db');
 const sms = require('./component/sms');
-// const accounts = web3.eth.accounts;
 
 Notifier.TaskUpdated().watch((err, event) => {
   if (err || !event.args.taskId || !event.args.state) {
@@ -22,7 +21,6 @@ Notifier.TaskUpdated().watch((err, event) => {
     const task = Notifier.tasks(event.args.taskId);
     const [, , destination, message, txid] = task;
 
-
     sms.send(destination, message).then(twilioData =>
       db.msgSent(event.args.taskId, txid, twilioData.sid)
     ).then(() => {
@@ -31,25 +29,20 @@ Notifier.TaskUpdated().watch((err, event) => {
       // TODO: Return (unwithhold) user's funds
       console.log(promiseErr);
     });
+  } else if (state === 50) { // processed, costing done, tx settled
+    console.log(`[Event] Task ID: ${event.args.taskId} is settled.`);
   }
 
   return true;
 });
 
 function processRefund(dbRow, usdPrice) {
-  console.log(dbRow, usdPrice);
-  console.log('wwwwwwwwwwwwwwwwwwwww');
-  console.log(config.get('server.ethUsd'));
   const ethPrice = usdPrice / config.get('server.ethUsd');
-  console.log('ddddddddddddddddddddddd');
-    console.log(dbRow.txid, ethPrice);
+  const weiPrice = web3.toWei(ethPrice, 'ether');
   return new Promise((resolve, reject) => {
-    console.log('ssssssssssssssssssssssssssss');
-    console.log(dbRow.txid, ethPrice);
-    Notifier.taskProcessedWithCosting(dbRow.txid, ethPrice, {
+    Notifier.taskProcessedWithCosting(dbRow.txid, weiPrice, {
       from: web3.eth.accounts[config.get('ethereum.adminAccount')],
     }, err => {
-      console.log(err);
       if (err) {
         return reject(err);
       }
@@ -73,7 +66,12 @@ function checkStatuses() {
         console.log(`Unknown price unit returned from Twilio – ${status.price_unit}`);
       }
       const dbRow = dbRows.find(row => row.twilioSid === status.sid);
-      processRefund(dbRow, Math.abs(parseFloat(status.price)));
+
+      let priceUsd = Math.abs(parseFloat(status.price));
+      if (isNaN(priceUsd)) {
+        priceUsd = 0;
+      }
+      processRefund(dbRow, priceUsd);
     });
     setTimeout(checkStatuses, checkStatusesInterval);
   }, err => {
@@ -83,17 +81,6 @@ function checkStatuses() {
 }
 
 checkStatuses();
-/*
-setInterval(() => {
-  checkStatuses();
-}, 1000);
-*/
-/*
-function getTask(taskID) {
-  return new Promise((resolve, reject) => {
 
-  });
-}
-*/
 console.log('\n[ ETH Notifier ]');
 console.log(`Watching smart contract at ${Notifier.address}`);
