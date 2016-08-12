@@ -15,6 +15,9 @@ Contract on main chain: _(TBA)_
   # Using testrpc (recommended)
   testrpc
 
+  # testrpc -g 20000000000
+  # to start testrpc with 0.02 szabo gas price
+
   # If you are running Geth, 
   # make sure to run in testnet or private net and enable rpc
   geth --testnet --rpc

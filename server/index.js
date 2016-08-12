@@ -1,3 +1,9 @@
+/**
+ * Ethereum monitor
+ *
+ * Monitors Notifier contract activities on Ethereum
+ * and performs actions accordingly
+ */
 const { Notifier, web3 } = require('../build/.server/contracts.js');
 const config = require('config');
 const db = require('./component/db');
@@ -52,10 +58,13 @@ function processRefund(dbRow, usdPrice) {
   });
 }
 
+const checkStatusesInterval = 10000; // 1 minute
 function checkStatuses() {
+  console.log('[ENQ] Checking statuses of pending SMSes...');
   let dbRows;
   db.getAllWithoutPricing().then(rows => {
     dbRows = rows;
+    console.log(`[ENQ] ${rows.length} pending messages...`);
     const twilioSids = rows.map(row => row.twilioSid);
     return sms.statuses(twilioSids);
   }).then(statuses => {
@@ -66,6 +75,10 @@ function checkStatuses() {
       const dbRow = dbRows.find(row => row.twilioSid === status.sid);
       processRefund(dbRow, Math.abs(parseFloat(status.price)));
     });
+    setTimeout(checkStatuses, checkStatusesInterval);
+  }, err => {
+    console.log(err);
+    setTimeout(checkStatuses, checkStatusesInterval);
   });
 }
 
