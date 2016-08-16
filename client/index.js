@@ -49,5 +49,13 @@ function balance(_account = null) {
   };
 }
 
-console.log(balance());
-console.log(notify());
+/**
+ * Withdrawing of Ether from contract balance to actual Ethereum balance
+ */
+function withdraw(_account = null, _amount = 0) {
+  const account = _account || getAddress(config.get('client.account'));
+
+  return Notifier.withdraw(_amount, { from: account });
+}
+
+module.exports = { notify, balance, withdraw };
