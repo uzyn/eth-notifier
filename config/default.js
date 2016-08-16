@@ -26,4 +26,13 @@ module.exports = {
   ethereum: {
     adminAccount: 0, // i-th account in web3 is admin account
   },
+
+  client: {
+    account: 3, // int or string (int: i-th acc in web3, string: actual address)
+    sms: {
+      to: '+6598318407',
+      message: `你好。Hello from blockchain. This message is initiated on ${new Date().toISOString()}.`,
+      ether: 0.05,
+    },
+  },
 };
