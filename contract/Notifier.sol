@@ -2,7 +2,7 @@ import 'library/owned.sol';
 import 'library/withAccounts.sol';
 
 contract Notifier is owned, withAccounts {
-  uint minEthPerNotification = 0.05 ether; // ~ USD 0.5
+  uint minEthPerNotification = 0.03 ether; // ~ USD 0.3
 
   struct Task {
     uint8 transport; // 1: sms

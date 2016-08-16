@@ -32,7 +32,12 @@ module.exports = {
     sms: {
       to: '+6598318407',
       message: `你好。Hello from blockchain. This message is initiated on ${new Date().toISOString()}.`,
-      ether: 0.03, // default eth to depsit
+      ether: 0.03, // default eth to depsit (must be > 0.03 for first call)
+    },
+
+    // For Flic's HTTP server
+    http: {
+      port: 3000,
     },
   },
 };

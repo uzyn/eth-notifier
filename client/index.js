@@ -1,61 +1,41 @@
 /**
- * HTTP server to accept HTTP calls
+ * HTTP server for Flic buttons
+ * implements a server and outputs plain text
  */
-const { Notifier, web3 } = require('../build/.server/contracts');
+const client = require('./sdk');
 const config = require('config');
-const { getAddress } = require('../server/component/eth-helpers');
+const app = require('express')();
 
-console.log('\n[ IoT blockchain HTTP bridge ]');
+app.get('/', (req, res) =>
+  res.send(`Available endpoints:
+    /notify - Sends a notification
+    /balance - Returns balance on Ethereum blockchain and on Notifier contract
+    /withdraw - Withdraw balance on Notifier contract to account
+  `)
+);
 
-/**
- * Sends an SMS notification
- */
-function notify(_account = null, _to = null, _message = null, _ether = null) {
-  const account = _account || getAddress(config.get('client.account'));
-  const to = _to || config.get('client.sms.to');
-  const message = _message || config.get('client.sms.message');
-  const ether = _ether || config.get('client.sms.ether');
+app.get('/notify', (req, res) => {
+  const txid = client.notify();
+  return res.send(`Notification sent\ntx: ${txid}`);
+});
 
-  const params = [
-    to,
-    message,
-    {
-      from: account,
-      value: web3.toWei(ether, 'ether'),
-    },
-  ];
+app.get('/balance', (req, res) => {
+  const balance = client.balance();
+  return res.send(`Balances:
+    In wallet: ETH ${balance.wallet}
+    On service (avail): ETH ${balance.service.available}
+    On service (on hold): ETH ${balance.service.onhold}
+  `);
+});
 
-  console.log(`Gas price: ${web3.fromWei(web3.eth.gasPrice, 'szabo')} szabo.`);
-  const estimatedGas = Notifier.notify.estimateGas(params[0], params[1], params[2]);
-  const gasInEth = parseFloat(web3.fromWei(estimatedGas * web3.eth.gasPrice, 'ether')).toFixed(4);
-  const gasInUsd = parseFloat(gasInEth * config.get('server.ethUsd')).toFixed(4);
-  console.log(`Gas estimated: ${estimatedGas} (ETH ${gasInEth} | USD ${gasInUsd})`);
+app.get('/withdraw', (req, res) => {
+  const txid = client.withdraw();
+  return res.send(`Successful withdrawal\ntx: ${txid}`);
+});
 
-  return Notifier.notify(params[0], params[1], params[2]);
-}
+const server = app.listen(config.get('client.http.port'), () => {
+  const host = server.address().address;
+  const port = server.address().port;
 
-/**
- * Returns balance of account (address)
- */
-function balance(_account = null) {
-  const account = _account || getAddress(config.get('client.account'));
-
-  return {
-    chain: web3.eth.getBalance(account),
-    service: {
-      available: Notifier.availableBalances(account),
-      onhold: Notifier.onholdBalances(account),
-    },
-  };
-}
-
-/**
- * Withdrawing of Ether from contract balance to actual Ethereum balance
- */
-function withdraw(_account = null, _amount = 0) {
-  const account = _account || getAddress(config.get('client.account'));
-
-  return Notifier.withdraw(_amount, { from: account });
-}
-
-module.exports = { notify, balance, withdraw };
+  console.log(`Flic's HTTP server for ETH Notifier is now listening at http://${host}:${port}`);
+});
