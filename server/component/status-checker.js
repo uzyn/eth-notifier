@@ -14,7 +14,8 @@ let checkingStatuses = false;
 let setCheckStatusesTimer = null;
 
 function processRefund(dbRow, usdPrice) {
-  const ethPrice = usdPrice / config.get('server.ethUsd');
+  let ethPrice = usdPrice / config.get('server.ethUsd');
+  ethPrice = Math.ceil(ethPrice * 10000) / 10000;
   const weiPrice = web3.toWei(ethPrice, 'ether');
   return new Promise((resolve, reject) => {
     Notifier.taskProcessedWithCosting(dbRow.txid, weiPrice, {

@@ -8,7 +8,10 @@ const { Notifier } = require('../build/.server/contracts');
 // const config = require('config');
 const db = require('./component/db');
 const sms = require('./component/sms');
-const statusChecker = require('./component/status-checker');
+const { setCheckStatusesTimer } = require('./component/status-checker');
+
+console.log('\n[ ETH Notifier ]');
+console.log(`Watching smart contract at ${Notifier.address}`);
 
 Notifier.TaskUpdated().watch((err, event) => {
   if (err || !event.args.taskId || !event.args.state) {
@@ -26,7 +29,7 @@ Notifier.TaskUpdated().watch((err, event) => {
       db.msgSent(event.args.taskId, txid, twilioData.sid)
     ).then(() => {
       console.log(`Message sent to ${destination}.`);
-      statusChecker.setCheckStatusesTimer(1000);
+      setCheckStatusesTimer(3000);
     }, promiseErr => {
       // TODO: Return (unwithhold) user's funds
       console.log(promiseErr);
@@ -38,8 +41,5 @@ Notifier.TaskUpdated().watch((err, event) => {
   return true;
 });
 
+setCheckStatusesTimer(5000);
 
-statusChecker.setCheckStatusesTimer(5000);
-
-console.log('\n[ ETH Notifier ]');
-console.log(`Watching smart contract at ${Notifier.address}`);
