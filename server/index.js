@@ -29,7 +29,7 @@ Notifier.TaskUpdated().watch((err, event) => {
       db.msgSent(event.args.taskId, txid, twilioData.sid)
     ).then(() => {
       console.log(`Message sent to ${destination}.`);
-      setCheckStatusesTimer(1000);
+      setCheckStatusesTimer(3000);
     }, promiseErr => {
       // TODO: Return (unwithhold) user's funds
       console.log(promiseErr);
