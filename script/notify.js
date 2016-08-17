@@ -9,8 +9,8 @@ const params = [
   '+6598318407',
   `Hello from blockchain. This message is initiated on ${new Date().toISOString()}.`,
   {
-    from: accounts[3],
-    value: web3.toWei(0.06, 'ether'),
+    from: accounts[1],
+    value: web3.toWei(0.08, 'ether'),
   },
 ];
 

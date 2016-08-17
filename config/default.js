@@ -28,7 +28,7 @@ module.exports = {
   },
 
   client: {
-    account: 3, // int or string (int: i-th acc in web3, string: actual address)
+    account: 1, // int or string (int: i-th acc in web3, string: actual address)
     sms: {
       to: '+6598318407',
       message: `你好。Hello from blockchain. This message is initiated on ${new Date().toISOString()}.`,
