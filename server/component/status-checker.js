@@ -20,6 +20,7 @@ function processRefund(dbRow, usdPrice) {
   return new Promise((resolve, reject) => {
     Notifier.taskProcessedWithCosting(dbRow.txid, weiPrice, {
       from: web3.eth.accounts[config.get('ethereum.adminAccount')],
+      gas: 1000000,
     }, err => {
       if (err) {
         return reject(err);
