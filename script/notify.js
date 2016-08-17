@@ -11,6 +11,7 @@ const params = [
   {
     from: accounts[1],
     value: web3.toWei(0.08, 'ether'),
+    gas: 1000000,
   },
 ];
 
@@ -20,4 +21,7 @@ const gasInEth = parseFloat(web3.fromWei(estimatedGas * web3.eth.gasPrice, 'ethe
 const gasInUsd = parseFloat(gasInEth * config.get('server.ethUsd')).toFixed(4);
 console.log(`Gas estimated: ${estimatedGas} (ETH ${gasInEth} | USD ${gasInUsd})`);
 
-Notifier.notify(params[0], params[1], params[2]);
+Notifier.notify(params[0], params[1], params[2], (err, res) => {
+  console.log(err);
+  console.log(res);
+});

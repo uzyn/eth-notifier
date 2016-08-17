@@ -20,6 +20,7 @@ function notify(_account = null, _to = null, _message = null, _ether = null) {
     {
       from: account,
       value: web3.toWei(ether, 'ether'),
+      gas: 1000000,
     },
   ];
 
