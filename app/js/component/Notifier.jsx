@@ -1,6 +1,6 @@
 import React from 'react';
 import { Notifier, web3 } from '../../../contract/Notifier.sol';
-import DisplayEth from '../mixin/DisplayEth.jsx';
+import DisplayEth from '../helper/DisplayEth.jsx';
 
 export default function NotifierComponent() {
   return (
@@ -25,7 +25,7 @@ export default function NotifierComponent() {
 
 
       <h3>Transactions</h3>
-      <p><DisplayEth wei={web3.eth.getBalance(Notifier.address).toString()} /></p>
+      <p><DisplayEth wei={web3.eth.getBalance(Notifier.address)} /></p>
     </div>
   );
 }
