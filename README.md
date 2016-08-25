@@ -20,7 +20,7 @@ Contract on main chain: _(TBA)_
 
   # If you are running Geth, 
   # make sure to run in testnet or private net and enable rpc
-  geth --testnet --rpc
+  geth --testnet --rpc --rpccorsdomain "*"
   ```
 
 1. Install dependencies
