@@ -29,4 +29,5 @@ node_modules
 
 # App
 /serverdb.sqlite3
+/contract/.deployed
 /config/local.js

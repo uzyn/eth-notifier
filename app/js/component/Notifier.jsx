@@ -1,5 +1,6 @@
 import React from 'react';
-import { Notifier, web3 } from '../../../contract/Notifier.sol';
+// import { Notifier, web3 } from '../../../contract/Notifier.sol';
+import { Notifier, web3 } from '../../../contract/.deployed';
 import DisplayEth from '../helper/DisplayEth.jsx';
 
 export default function NotifierComponent() {

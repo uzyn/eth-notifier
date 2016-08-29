@@ -3,10 +3,10 @@ const nodeExternals = require('webpack-node-externals');
 const config = require('./webpack.config.js');
 
 config.entry = {
-  contracts: path.resolve(__dirname, 'server/loader/contracts.js'),
+  index: path.resolve(__dirname, 'contract/'),
 };
 config.output = {
-  path: path.resolve(__dirname, 'build/.server'),
+  path: path.resolve(__dirname, 'contract/.deployed/'),
   filename: '[name].js',
   libraryTarget: 'commonjs2',
 };

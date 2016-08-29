@@ -7,7 +7,7 @@
     "lint": "eslint --ext=js --ext=jsx --ignore-path .gitignore .",
     "build": "webpack",
     "test": "mocha-webpack",
-    "build-server": "webpack --config webpack.config.server.js"
+    "deploy": "webpack --config webpack.config.contracts.js"
   },
   "repository": {
     "type": "git",

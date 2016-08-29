@@ -1,7 +1,7 @@
 /**
  * Ethereum helpers
  */
-const { web3 } = require('../../build/.server/contracts');
+const { web3 } = require('../../contract/.deployed');
 
 /**
  * Returns address, either:

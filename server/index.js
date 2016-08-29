@@ -4,7 +4,7 @@
  * Monitors Notifier contract activities on Ethereum
  * and performs actions accordingly
  */
-const { Notifier } = require('../build/.server/contracts');
+const { Notifier } = require('../contract/.deployed');
 // const config = require('config');
 const db = require('./component/db');
 const sms = require('./component/sms');

@@ -2,7 +2,7 @@
  * Handles checking of statuses from Twilio and
  * processes refund both on blockchain and on db
  */
-const { Notifier, web3 } = require('../../build/.server/contracts');
+const { Notifier, web3 } = require('../../contract/.deployed');
 const config = require('config');
 const db = require('./db');
 const sms = require('./sms');

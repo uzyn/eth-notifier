@@ -1,7 +1,7 @@
 /**
  * Sends notification via blockchain
  */
-const { Notifier, web3 } = require('../build/.server/contracts.js');
+const { Notifier, web3 } = require('../contract/.deployed.js');
 const accounts = web3.eth.accounts;
 const config = require('config');
 
