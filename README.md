@@ -44,7 +44,6 @@ Both the bridges can be run on the same server or can be run on 2 separate serve
     npm install
     ```
 
-
 ### As a service provider
 
 Service provider in this context is the one providing SMS notification service in exchange for Ether.
@@ -63,6 +62,9 @@ Service provider in this context is the one providing SMS notification service i
     ```
     npm run redeploy
     ```
+
+    (WIP. See [tips](#tips) for info on how to redeploy)
+
 
 ##### Web interface
 
@@ -86,6 +88,8 @@ Web interface is optional. You may run it either via `npm run web-dev` or by acc
     npm run redeploy
     ```
 
+    (WIP. See [tips](#tips) for info on how to redeploy)
+
 ##### Web interface
 
 There are no web interface for client server at this point in time.
@@ -95,3 +99,4 @@ There are no web interface for client server at this point in time.
 
 1. Files at `script/` are one-off scripts to help during development and are not loaded anywhere. 
 
+2. `redeploy` is still work-in-progress. In the mean time, to redeploy contracts, remove `deployedContracts` section from `webpack.config.contract.js` and run `npm build`.
