@@ -1,5 +1,5 @@
 import React from 'react';
-import { web3 } from '../../../contract/MyToken.sol';
+import { web3 } from '../../../contract/Notifier.sol';
 
 export default function Web3() {
   return (

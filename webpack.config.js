@@ -17,7 +17,6 @@ module.exports = {
   },
   web3Loader: {
     constructorParams: {
-      MyToken: [250000, 'The Coin', 2, 'TC$', '1.0.0'],
     },
     deployedContracts: {
       Notifier: '0x4e2822607180a09a6eea85d3b98041a65135151b',
