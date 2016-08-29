@@ -21,7 +21,7 @@ This repository contains 2 independent sets of code that powers:
 
 Both the bridges can be run on the same server or can be run on 2 separate servers.
 
-## How to run (common)
+## How to run (common for both)
 
 1. Run a local Ethereum node with JSON-RPC listening at port 8545 _(default)_. [testrpc](https://github.com/ethereumjs/testrpc) would be the most straight-forward method.
 
@@ -35,6 +35,7 @@ Both the bridges can be run on the same server or can be run on 2 separate serve
     # If you are running Geth, 
     # make sure to run in testnet or private net and enable rpc
     geth --testnet --rpc --rpccorsdomain "*"
+    # Tip: Do not forget to unlock relevant wallets
     ```
 
 1. Install dependencies
@@ -54,8 +55,7 @@ Service provider in this context is the one providing SMS notification service i
 
     ```bash
     node server/
-
-    # Tips: use PM2 for keep alive
+    # Tip: use PM2 for keep-alive
     ```
 
     Note: You may wish to redeploy the contracts by running:
@@ -76,9 +76,8 @@ Web interface is optional. You may run it either via `npm run web-dev` or by acc
 1. Run the server
 
     ```bash
-    node server/
-
-    # Tips: use PM2 for keep alive
+    node client/
+    # Tip: use PM2 for keep-alive
     ```
 
     Note: You may wish to redeploy the contracts by running:

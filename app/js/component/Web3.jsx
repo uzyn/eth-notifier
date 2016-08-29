@@ -1,5 +1,6 @@
 import React from 'react';
-import { web3 } from '../../../contract/Notifier.sol';
+// import { web3 } from '../../../contract/Notifier.sol';
+import { web3 } from '../../../contract/.deployed';
 
 export default function Web3() {
   return (
