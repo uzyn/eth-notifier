@@ -3,11 +3,16 @@
   "version": "0.1.0",
   "description": "An Ethereum smart contract that delivers notification on call.",
   "scripts": {
-    "start": "webpack-dev-server --inline --content-base build/",
-    "lint": "eslint --ext=js --ext=jsx --ignore-path .gitignore .",
-    "build": "webpack",
+    "start": "npm run web-dev",
+    "build": "npm run build-contracts && npm run build-web",
+
+    "build-contracts": "webpack --config webpack.config.contracts.js",
+    "build-web": "webpack --config webpack.config.web.js",
+
+    "redeploy": "webpack --config webpack.config.contracts.js",
+    "web-dev": "npm run build-contracts && webpack-dev-server --config webpack.config.web.js --inline --content-base build/",
     "test": "mocha-webpack",
-    "build-server": "webpack --config webpack.config.server.js"
+    "lint": "eslint --ext=js --ext=jsx --ignore-path .gitignore ."
   },
   "repository": {
     "type": "git",

@@ -1,7 +1,7 @@
 /**
  * SDK for Flic buttons HTTP server
  */
-const { Notifier, web3 } = require('../build/.server/contracts');
+const { Notifier, web3 } = require('../contract/.deployed');
 const config = require('config');
 const { getAddress } = require('../server/component/eth-helpers');
 

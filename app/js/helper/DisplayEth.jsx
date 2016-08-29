@@ -1,5 +1,5 @@
 import React from 'react';
-import { web3 } from '../../../contract/Notifier.sol';
+import { web3 } from '../../../contract/.deployed';
 
 // import BigNumber from 'twilio';
 // import { BigNumber } from '../../../contract/Notifier.sol';
