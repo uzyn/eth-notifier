@@ -14,12 +14,12 @@ let checkingStatuses = false;
 let setCheckStatusesTimer = null;
 
 function processRefund(dbRow, usdPrice) {
-  let ethPrice = usdPrice / config.get('server.ethUsd');
+  let ethPrice = usdPrice / config.get('provider.ethUsd');
   ethPrice = Math.ceil(ethPrice * 10000) / 10000;
   const weiPrice = web3.toWei(ethPrice, 'ether');
   return new Promise((resolve, reject) => {
     Notifier.taskProcessedWithCosting(dbRow.txid, weiPrice, {
-      from: web3.eth.accounts[config.get('ethereum.adminAccount')],
+      from: web3.eth.accounts[config.get('provider.ethereum.adminAccount')],
       gas: 1000000,
     }, err => {
       if (err) {
