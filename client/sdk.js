@@ -9,7 +9,7 @@ const { getAddress } = require('../server/component/eth-helpers');
  * Sends an SMS notification
  */
 function notify(_account = null, _to = null, _message = null, _ether = null) {
-  const account = _account || getAddress(config.get('client.account'));
+  const account = _account || getAddress(config.get('client.ethereum.account'));
   const to = _to || config.get('client.sms.to');
   const message = _message || config.get('client.sms.message');
   const ether = _ether || config.get('client.sms.ether');
@@ -27,7 +27,7 @@ function notify(_account = null, _to = null, _message = null, _ether = null) {
   console.log(`Gas price: ${web3.fromWei(web3.eth.gasPrice, 'szabo')} szabo.`);
   const estimatedGas = Notifier.notify.estimateGas(params[0], params[1], params[2]);
   const gasInEth = parseFloat(web3.fromWei(estimatedGas * web3.eth.gasPrice, 'ether')).toFixed(4);
-  const gasInUsd = parseFloat(gasInEth * config.get('server.ethUsd')).toFixed(4);
+  const gasInUsd = parseFloat(gasInEth * config.get('provider.ethUsd')).toFixed(4);
   console.log(`Gas estimated: ${estimatedGas} (ETH ${gasInEth} | USD ${gasInUsd})`);
 
   return Notifier.notify(params[0], params[1], params[2]);
@@ -37,7 +37,7 @@ function notify(_account = null, _to = null, _message = null, _ether = null) {
  * Returns balance of account (address)
  */
 function balance(_account = null) {
-  const account = _account || getAddress(config.get('client.account'));
+  const account = _account || getAddress(config.get('client.ethereum.account'));
 
   return {
     wallet: web3.fromWei(web3.eth.getBalance(account), 'ether'),
@@ -52,7 +52,7 @@ function balance(_account = null) {
  * Withdrawing of Ether from contract balance to actual Ethereum balance
  */
 function withdraw(_account = null, _amount = 0) {
-  const account = _account || getAddress(config.get('client.account'));
+  const account = _account || getAddress(config.get('client.ethereum.account'));
 
   return Notifier.withdraw(_amount, { from: account });
 }

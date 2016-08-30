@@ -4,7 +4,7 @@
  */
 const config = require('config');
 const sqlite3 = require('sqlite3');
-const db = new sqlite3.Database(config.get('server.sqliteDatabase'));
+const db = new sqlite3.Database(config.get('provider.sqliteDatabase'));
 
 db.serialize(() => {
   db.run(`CREATE TABLE IF NOT EXISTS sms (

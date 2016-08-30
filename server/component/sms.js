@@ -1,10 +1,10 @@
 const config = require('config');
 const twilio = require('twilio')(
-  config.get('twilio.accountSid'),
-  config.get('twilio.authToken')
+  config.get('provider.twilio.accountSid'),
+  config.get('provider.twilio.authToken')
 );
 
-const messagingServiceSid = config.get('twilio.messagingServiceSid');
+const messagingServiceSid = config.get('provider.twilio.messagingServiceSid');
 
 /**
  * Sends an SMS to destination with message
@@ -15,7 +15,7 @@ function send(destination, message) {
       messagingServiceSid,
       to: destination,
       body: message,
-      maxPrice: config.get('twilio.maxUsdPerSms'),
+      maxPrice: config.get('provider.twilio.maxUsdPerSms'),
     }, (err, data) => {
       if (err) {
         return reject(err);

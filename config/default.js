@@ -7,28 +7,39 @@
 module.exports = {
 
   /**
-   * Twilio account details
-   *
-   * For messaging service SID, create a messaging service at
-   * https://www.twilio.com/user/account/messaging/services
-   * and assign the numbers
+   * Configuration for service provider
    */
-  twilio: {
-    accountSid: 'xxxxxxxxxxxxxxxxxxxxxxx',
-    authToken: 'xxxxxxxxxxxxxxxxxxxxxxx',
-    messagingServiceSid: 'xxxxxxxxxxxxxxxxxxxxxxx',
-    maxUsdPerSms: 0.5, // This should be less than the amount withhold by Notifier.sol
-  },
-  server: {
+  provider: {
     sqliteDatabase: './serverdb.sqlite3',
     ethUsd: 11, // 1 ETH = ? USD
-  },
-  ethereum: {
-    adminAccount: 0, // i-th account in web3 is admin account
+
+    /**
+     * Twilio account details
+     *
+     * For messaging service SID, create a messaging service at
+     * https://www.twilio.com/user/account/messaging/services
+     * and assign the numbers
+     */
+    twilio: {
+      accountSid: 'xxxxxxxxxxxxxxxxxxxxxxx',
+      authToken: 'xxxxxxxxxxxxxxxxxxxxxxx',
+      messagingServiceSid: 'xxxxxxxxxxxxxxxxxxxxxxx',
+      maxUsdPerSms: 0.5, // This should be less than the amount withhold by Notifier.sol
+    },
+
+    ethereum: {
+      adminAccount: 0, // i-th account in web3 is admin account
+    },
   },
 
+  /**
+   * Configuration for client HTTP-Ethereum bridge server
+   */
   client: {
-    account: 1, // int or string (int: i-th acc in web3, string: actual address)
+    ethereum: {
+      account: 1, // int or string (int: i-th acc in web3, string: actual address)
+    },
+
     sms: {
       to: '+6598318407',
       message: `你好。Hello from blockchain. This message is initiated on ${new Date().toISOString()}.`,
