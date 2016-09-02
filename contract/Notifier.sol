@@ -7,14 +7,18 @@ contract Notifier is owned, withAccounts {
   struct Task {
     uint8 transport; // 1: sms
     address sender;
-    string destination;
-    string message;
     uint txid; // AccountTxid (dealing with payment)
     uint8 state; // 10: pending
                  // 20: processed, but tx still open
                  // [ FINAL STATES >= 50 ]
                  // 50: processed, costing done, tx settled
                  // 60: rejected or error-ed, costing done, tx settled
+
+    // Augmentable parameters
+    string destination;
+    string message;
+
+    string xipfs; // Hash for IPFS-augmented calls
   }
 
   mapping(uint => Task) public tasks;
@@ -30,8 +34,14 @@ contract Notifier is owned, withAccounts {
     owners[msg.sender] = true;
   }
 
+/**
+ * --------------
+ * Main functions
+ * --------------
+ */
+
   /**
-   * Main function - sends out notification
+   * Sends out notification
    */
   function notify(string _destination, string _message) public handleDeposit returns (uint txid) {
     txid = createTx(msg.sender, minEthPerNotification, 1 weeks);
@@ -42,6 +52,31 @@ contract Notifier is owned, withAccounts {
       sender: msg.sender,
       destination: _destination,
       message: _message,
+      txid: txid,
+      state: 10 // pending
+    });
+    TaskUpdated(id, 10, 1);
+    ++tasksCount;
+
+    return txid;
+  }
+
+/**
+ * --------------
+ * Extended functions, for
+ * - IPFS-augmented calls
+ * - Encrypted calls
+ * --------------
+ */
+
+  function xnotify(string _hash) public handleDeposit returns (uint txid) {
+    txid = createTx(msg.sender, minEthPerNotification, 1 weeks);
+
+    uint id = tasksCount;
+    tasks[id] = Task({
+      transport: 1, // sms
+      sender: msg.sender,
+      xipfs: _hash,
       txid: txid,
       state: 10 // pending
     });
