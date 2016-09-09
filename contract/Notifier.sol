@@ -50,10 +50,12 @@ contract Notifier is owned, withAccounts {
     tasks[id] = Task({
       transport: 1, // sms
       sender: msg.sender,
+      txid: txid,
+      state: 10, // pending
+
       destination: _destination,
       message: _message,
-      txid: txid,
-      state: 10 // pending
+      xipfs: ''
     });
     TaskUpdated(id, 10, 1);
     ++tasksCount;
@@ -76,9 +78,12 @@ contract Notifier is owned, withAccounts {
     tasks[id] = Task({
       transport: 1, // sms
       sender: msg.sender,
-      xipfs: _hash,
       txid: txid,
-      state: 10 // pending
+      state: 10, // pending
+
+      xipfs: _hash,
+      destination: '',
+      message: ''
     });
     TaskUpdated(id, 10, 1);
     ++tasksCount;
