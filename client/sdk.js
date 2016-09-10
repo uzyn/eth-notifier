@@ -4,33 +4,64 @@
 const { Notifier, web3 } = require('../contract/.deployed');
 const config = require('config');
 const { getAddress } = require('../server/component/eth-helpers');
+const xipfs = require('./xipfs');
+
+/**
+ * Call a smart contract method passing in parameters
+ * Also output gas cost
+ */
+function call(method, params) {
+  const estimatedGas = method.estimateGas(...params);
+  const gasInEth = parseFloat(web3.fromWei(estimatedGas * web3.eth.gasPrice, 'ether')).toFixed(4);
+  const gasInUsd = parseFloat(gasInEth * config.get('provider.ethUsd')).toFixed(4);
+  console.log(`Gas estimated: ${estimatedGas} (ETH ${gasInEth} | USD ${gasInUsd})`);
+  return method(...params);
+}
 
 /**
  * Sends an SMS notification
+ * _options {
+ *   xipfs: true, for augmented ipfs support
+ *   encrypted: true, for encryption support
+ * }
  */
-function notify(_account = null, _to = null, _message = null, _ether = null) {
+function notify(_account = null, _to = null, _message = null, _ether = null, _options = {}) {
   const account = _account || getAddress(config.get('client.ethereum.account'));
   const to = _to || config.get('client.sms.to');
   const message = _message || config.get('client.sms.message');
   const ether = _ether || config.get('client.sms.ether');
+  const options = Object.assign(config.get('client.extended'), _options);
 
-  const params = [
+  const transactionObject = {
+    from: account,
+    value: web3.toWei(ether, 'ether'),
+    gas: 1000000,
+  };
+
+  // Non-extended call
+  if (!options.xipfs) {
+    const params = [to, message, transactionObject];
+    return new Promise((resolve) => resolve(
+      call(Notifier.notify, params)
+    ));
+  }
+
+  console.log('Extended call via IPFS');
+  const ipfsData = [
     to,
     message,
-    {
-      from: account,
-      value: web3.toWei(ether, 'ether'),
-      gas: 1000000,
-    },
   ];
-
-  console.log(`Gas price: ${web3.fromWei(web3.eth.gasPrice, 'szabo')} szabo.`);
-  const estimatedGas = Notifier.notify.estimateGas(params[0], params[1], params[2]);
-  const gasInEth = parseFloat(web3.fromWei(estimatedGas * web3.eth.gasPrice, 'ether')).toFixed(4);
-  const gasInUsd = parseFloat(gasInEth * config.get('provider.ethUsd')).toFixed(4);
-  console.log(`Gas estimated: ${estimatedGas} (ETH ${gasInEth} | USD ${gasInUsd})`);
-
-  return Notifier.notify(params[0], params[1], params[2]);
+  return new Promise((resolve, reject) => {
+    xipfs.push(ipfsData).then(data => {
+      const params = [
+        data[0].hash,
+        transactionObject,
+      ];
+      return resolve(
+        call(Notifier.xnotify, params)
+      );
+    }, err => reject(err));
+  });
 }
 
 /**

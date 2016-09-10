@@ -5,10 +5,8 @@
   "scripts": {
     "start": "npm run web-dev",
     "build": "npm run build-contracts && npm run build-web",
-
     "build-contracts": "webpack --config webpack.config.contracts.js",
     "build-web": "webpack --config webpack.config.web.js",
-
     "redeploy": "webpack --config webpack.config.contracts.js",
     "web-dev": "npm run build-contracts && webpack-dev-server --config webpack.config.web.js --inline --content-base build/",
     "test": "mocha-webpack",
@@ -47,6 +45,7 @@
     "babel-polyfill": "^6.7.4",
     "config": "^1.21.0",
     "express": "^4.14.0",
+    "ipfs-api": "^8.0.3",
     "react": "^15.0.1",
     "react-dom": "^15.0.1",
     "sqlite3": "^3.1.4",

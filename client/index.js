@@ -14,10 +14,11 @@ app.get('/', (req, res) =>
   `)
 );
 
-app.get('/notify', (req, res) => {
-  const txid = client.notify();
-  return res.send(`Notification sent\ntx: ${txid}`);
-});
+app.get('/notify', (req, res) =>
+  client.notify().then(txid =>
+    res.send(`Notification sent\ntx: ${txid}`)
+  )
+);
 
 app.get('/balance', (req, res) => {
   const balance = client.balance();
