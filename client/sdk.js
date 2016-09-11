@@ -51,16 +51,13 @@ function notify(_account = null, _to = null, _message = null, _ether = null, _op
     to,
     message,
   ];
-  return new Promise((resolve, reject) => {
-    xipfs.push(ipfsData).then(data => {
-      const params = [
-        data[0].hash,
-        transactionObject,
-      ];
-      return resolve(
-        call(Notifier.xnotify, params)
-      );
-    }, err => reject(err));
+
+  return xipfs.push(ipfsData).then(data => {
+    const params = [
+      data[0].hash,
+      transactionObject,
+    ];
+    return call(Notifier.xnotify, params);
   });
 }
 
