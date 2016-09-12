@@ -31,9 +31,8 @@ function processPendingTask(taskId, attempt = 0) {
         });
       }
     }, xipfsErr => {
-      console.log(xipfsErr)
       if (attempt <= 5) {
-        console.log('Retry xipfs in 30 secs');
+        console.log(`Attempt ${attempt}: Retry xipfs in 30 secs`);
         setTimeout(() => {
           processPendingTask(taskId, ++attempt);
         }, 30000);
@@ -69,8 +68,3 @@ Notifier.TaskUpdated().watch((err, event) => {
 });
 
 setCheckStatusesTimer(5000);
-
-xipfs.get('QmUVFV5SEpbq7pee2pK15zQHi9yP56v5fydL4xqVAP1sSE').then(data => {
-  console.log('RETURNED:', data);
-}, err => console.log('EEEEEEE', err)
-);
