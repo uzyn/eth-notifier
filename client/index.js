@@ -34,7 +34,7 @@ app.get('/withdraw', (req, res) => {
   return res.send(`Successful withdrawal\ntx: ${txid}`);
 });
 
-const server = app.listen(config.get('client.http.port'), () => {
+  const server = app.listen(config.get('client.http.port'), () => {
   const host = server.address().address;
   const port = server.address().port;
 

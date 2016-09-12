@@ -8,6 +8,7 @@ const { Notifier } = require('../contract/.deployed');
 // const config = require('config');
 const db = require('./component/db');
 const sms = require('./component/sms');
+const xipfs = require('../lib/xipfs');
 const { setCheckStatusesTimer } = require('./component/status-checker');
 
 console.log('\n[ ETH Notifier ]');
@@ -23,17 +24,31 @@ Notifier.TaskUpdated().watch((err, event) => {
 
   if (state === 10) { // pending, send the message
     const task = Notifier.tasks(event.args.taskId);
-    const [, , destination, message, txid] = task;
+    let [xipfsHash, transport, destination, message, , txid] = task;
 
-    sms.send(destination, message).then(twilioData =>
-      db.msgSent(event.args.taskId, txid, twilioData.sid)
-    ).then(() => {
-      console.log(`Message sent to ${destination}.`);
-      setCheckStatusesTimer(3000);
-    }, promiseErr => {
-      // TODO: Return (unwithhold) user's funds
-      console.log(promiseErr);
-    });
+    if (xipfsHash) {
+      xipfs.get(xipfsHash).then(data => {
+        [transport, destination, message] = data;
+        if (transport.toNumber() === 1) {
+          sms.send(destination, message).then(twilioData =>
+            db.msgSent(taskId, txid, twilioData.sid)
+          ).then(() => {
+            console.log(`Message sent to ${destination}.`);
+            setCheckStatusesTimer(3000);
+          });
+        }
+      }, xipfsErr => console.log(xipfsErr));
+    }
+    else {
+      if (transport.toNumber() === 1) {
+        sms.send(destination, message).then(twilioData =>
+          db.msgSent(taskId, txid, twilioData.sid)
+        ).then(() => {
+          console.log(`Message sent to ${destination}.`);
+          setCheckStatusesTimer(3000);
+        });
+      }
+    }
   } else if (state === 50) { // processed, costing done, tx settled
     console.log(`[Event] Task ID: ${event.args.taskId} is settled.`);
   }
@@ -43,3 +58,7 @@ Notifier.TaskUpdated().watch((err, event) => {
 
 setCheckStatusesTimer(5000);
 
+xipfs.get('QmUVFV5SEpbq7pee2pK15zQHi9yP56v5fydL4xqVAP1sSE').then(data => {
+  console.log('RETURNED:', data);
+}, err => console.log('EEEEEEE', err)
+);

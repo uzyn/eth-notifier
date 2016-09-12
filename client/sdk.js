@@ -3,8 +3,13 @@
  */
 const { Notifier, web3 } = require('../contract/.deployed');
 const config = require('config');
-const { getAddress } = require('../server/component/eth-helpers');
-const xipfs = require('./xipfs');
+const { getAddress } = require('../lib/eth-helpers');
+const xipfs = require('../lib/xipfs');
+
+const TRANSPORT = {
+  SMS: 1,
+  EMAIL: 2
+};
 
 /**
  * Call a smart contract method passing in parameters
@@ -25,11 +30,12 @@ function call(method, params) {
  *   encrypted: true, for encryption support
  * }
  */
-function notify(_account = null, _to = null, _message = null, _ether = null, _options = {}) {
+function notify(_account = null, _to = null, _message = null, _ether = null, _transport = null, _options = {}) {
   const account = _account || getAddress(config.get('client.ethereum.account'));
   const to = _to || config.get('client.sms.to');
   const message = _message || config.get('client.sms.message');
   const ether = _ether || config.get('client.sms.ether');
+  const transport = _transport || TRANSPORT.SMS;
   const options = Object.assign(config.get('client.extended'), _options);
 
   const transactionObject = {
@@ -40,7 +46,7 @@ function notify(_account = null, _to = null, _message = null, _ether = null, _op
 
   // Non-extended call
   if (!options.xipfs) {
-    const params = [to, message, transactionObject];
+    const params = [transport, to, message, transactionObject];
     return new Promise((resolve) => resolve(
       call(Notifier.notify, params)
     ));
@@ -48,11 +54,13 @@ function notify(_account = null, _to = null, _message = null, _ether = null, _op
 
   console.log('Extended call via IPFS');
   const ipfsData = [
+    transport,
     to,
     message,
   ];
 
   return xipfs.push(ipfsData).then(data => {
+    console.log(`IPFS hash: ${data[0].hash}`);
     const params = [
       data[0].hash,
       transactionObject,

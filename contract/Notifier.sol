@@ -5,7 +5,13 @@ contract Notifier is owned, withAccounts {
   uint minEthPerNotification = 0.03 ether; // ~ USD 0.3
 
   struct Task {
-    uint8 transport; // 1: sms
+    string xipfs; // Hash for IPFS-augmented calls
+
+    // Augmentable parameters
+    uint8 transport; // 1: sms, 2: email
+    string destination;
+    string message;
+
     address sender;
     uint txid; // AccountTxid (dealing with payment)
     uint8 state; // 10: pending
@@ -13,12 +19,6 @@ contract Notifier is owned, withAccounts {
                  // [ FINAL STATES >= 50 ]
                  // 50: processed, costing done, tx settled
                  // 60: rejected or error-ed, costing done, tx settled
-
-    // Augmentable parameters
-    string destination;
-    string message;
-
-    string xipfs; // Hash for IPFS-augmented calls
   }
 
   mapping(uint => Task) public tasks;
@@ -43,19 +43,23 @@ contract Notifier is owned, withAccounts {
   /**
    * Sends out notification
    */
-  function notify(string _destination, string _message) public handleDeposit returns (uint txid) {
+  function notify(uint8 _transport, string _destination, string _message) public handleDeposit returns (uint txid) {
+    if (_transport != 1 && _transport != 2) {
+      throw;
+    }
+
     txid = createTx(msg.sender, minEthPerNotification, 1 weeks);
 
     uint id = tasksCount;
     tasks[id] = Task({
-      transport: 1, // sms
+      xipfs: '',
+      transport: _transport, // 1: sms, 2: email
+      destination: _destination,
+      message: _message,
+
       sender: msg.sender,
       txid: txid,
       state: 10, // pending
-
-      destination: _destination,
-      message: _message,
-      xipfs: ''
     });
     TaskUpdated(id, 10, 1);
     ++tasksCount;
@@ -76,14 +80,14 @@ contract Notifier is owned, withAccounts {
 
     uint id = tasksCount;
     tasks[id] = Task({
+      xipfs: _hash,
       transport: 1, // sms
+      destination: '',
+      message: '',
+
       sender: msg.sender,
       txid: txid,
       state: 10, // pending
-
-      xipfs: _hash,
-      destination: '',
-      message: ''
     });
     TaskUpdated(id, 10, 1);
     ++tasksCount;
