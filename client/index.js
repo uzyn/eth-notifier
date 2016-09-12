@@ -14,11 +14,39 @@ app.get('/', (req, res) =>
   `)
 );
 
+/**
+ * Notify with default configuration
+ */
 app.get('/notify', (req, res) =>
   client.notify().then(txid =>
-    res.send(`Notification sent\ntx: ${txid}`)
+    res.send(`[Default] Notification sent\ntx: ${txid}`)
   )
 );
+
+// Without xipfs
+app.get('/notify/plain', (req, res) =>
+  client.notify(null, null, null, null, null, { xipfs: false }).then(txid =>
+    res.send(`[Plain] Notification sent\ntx: ${txid}`)
+  )
+);
+
+/**
+ * Notify via xipfs
+ *
+ * /xipfs for non-encrypted xipfs
+ * /xipfs/encrypted for encrypted xipfs
+ */
+function xipfsNotify(req, res) {
+  let boolEncrypted = false;
+  if (req.params.encrypted) {
+    boolEncrypted = true;
+  }
+  return client.notify(null, null, null, null, null, { ipfs: true, encrypted: boolEncrypted }).then(txid =>
+    res.send(`[xIPFS - Encrypted: ${boolEncrypted.toString()}] Notification sent\ntx: ${txid}`)
+  );
+}
+app.get('/notify/xipfs', xipfsNotify);
+app.get('/notify/xipfs/:encrypted', xipfsNotify);
 
 app.get('/balance', (req, res) => {
   const balance = client.balance();

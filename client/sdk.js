@@ -36,7 +36,7 @@ function notify(_account = null, _to = null, _message = null, _ether = null, _tr
   const message = _message || config.get('client.sms.message');
   const ether = _ether || config.get('client.sms.ether');
   const transport = _transport || TRANSPORT.SMS;
-  const options = Object.assign(config.get('client.extended'), _options);
+  const options = Object.assign({}, config.get('client.extended'), _options);
 
   const transactionObject = {
     from: account,
