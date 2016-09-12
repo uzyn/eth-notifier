@@ -5,10 +5,14 @@ contract Notifier is owned, withAccounts {
   uint minEthPerNotification = 0.03 ether; // ~ USD 0.3
 
   struct Task {
-    uint8 transport; // 1: sms
-    address sender;
+    string xipfs; // Hash for IPFS-augmented calls
+
+    // Augmentable parameters
+    uint8 transport; // 1: sms, 2: email
     string destination;
     string message;
+
+    address sender;
     uint txid; // AccountTxid (dealing with payment)
     uint8 state; // 10: pending
                  // 20: processed, but tx still open
@@ -30,20 +34,60 @@ contract Notifier is owned, withAccounts {
     owners[msg.sender] = true;
   }
 
+/**
+ * --------------
+ * Main functions
+ * --------------
+ */
+
   /**
-   * Main function - sends out notification
+   * Sends out notification
    */
-  function notify(string _destination, string _message) public handleDeposit returns (uint txid) {
+  function notify(uint8 _transport, string _destination, string _message) public handleDeposit returns (uint txid) {
+    if (_transport != 1 && _transport != 2) {
+      throw;
+    }
+
     txid = createTx(msg.sender, minEthPerNotification, 1 weeks);
 
     uint id = tasksCount;
     tasks[id] = Task({
-      transport: 1, // sms
-      sender: msg.sender,
+      xipfs: '',
+      transport: _transport, // 1: sms, 2: email
       destination: _destination,
       message: _message,
+
+      sender: msg.sender,
       txid: txid,
-      state: 10 // pending
+      state: 10, // pending
+    });
+    TaskUpdated(id, 10, 1);
+    ++tasksCount;
+
+    return txid;
+  }
+
+/**
+ * --------------
+ * Extended functions, for
+ * - IPFS-augmented calls
+ * - Encrypted calls
+ * --------------
+ */
+
+  function xnotify(string _hash) public handleDeposit returns (uint txid) {
+    txid = createTx(msg.sender, minEthPerNotification, 1 weeks);
+
+    uint id = tasksCount;
+    tasks[id] = Task({
+      xipfs: _hash,
+      transport: 1, // sms
+      destination: '',
+      message: '',
+
+      sender: msg.sender,
+      txid: txid,
+      state: 10, // pending
     });
     TaskUpdated(id, 10, 1);
     ++tasksCount;
