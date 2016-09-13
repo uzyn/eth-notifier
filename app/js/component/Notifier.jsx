@@ -50,6 +50,7 @@ export default function NotifierComponent() {
         </table>
 
         <section className="use">
+        <hr />
         <h2>How to use</h2>
 
         <h3>Quick and simple</h3>
@@ -84,8 +85,13 @@ export default function NotifierComponent() {
         </li>
 
         </ol>
-        </section>
 
+        <h3>Cheaper? Private calls?</h3>
+
+        <p>ETH Notifier adopts <a href="https://github.com/uzyn/ethereum-service-standard" target="_blank"><strong>Ethereum Service Standard</strong></a> and supports IPFS-augmented calls (xIPFS) with TLS-like encryption.</p>
+
+        </section>
+        <hr />
         <h2>Transactions</h2>
         <p>View raw transactions from <a href={`https://testnet.etherscan.io/address/${Notifier.address}`} target="_blank">Etherscan</a> or <a href={`https://morden.ether.camp/account/${Notifier.address}`} target="_blank">Ether.camp</a>.</p>
       </section>
