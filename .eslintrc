@@ -2,7 +2,9 @@
   "extends": "airbnb",
   "rules": {
     "max-len": 0,
-    "prefer-const": ["error", {"mixed": true}]
+    "prefer-const": ["error", {
+      "destructuring": "any"
+    }]
   },
   "env": {
     "mocha": true
