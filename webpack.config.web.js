@@ -23,7 +23,9 @@ module.exports = {
         from: '**/*',
         to: path.resolve(__dirname, 'build'),
       },
-    ]),
+    ], {
+      copyUnmodified: true,
+    }),
   ],
   module: {
     preLoaders: [

@@ -5,39 +5,48 @@ import DisplayEth from '../helper/DisplayEth.jsx';
 
 export default function NotifierComponent() {
   return (
-    <div className="Notifier">
-      <h1>ETH Notifier</h1>
+    <div className="Notifier row">
+      <section className="intro-panel col-md-5">
+        <h1>ETH Notifier</h1>
 
-      <h2>Sends SMS from Ethereum</h2>
+        <h2>Sends SMS from Ethereum</h2>
 
-      <h4>Currently running on Ethereum Morden testnet</h4>
+        <h4>Currently running on Ethereum Morden testnet</h4>
 
-      <p>Address: <strong><a href={`https://testnet.etherscan.io/address/${Notifier.address}`} target="_blank">{Notifier.address}</a></strong></p>
+        <p>&nbsp;</p>
+        <p>&nbsp;</p>
 
-      <p>Application Binary Interface (ABI): <br />
-        <textarea name="Notifier.abi" readOnly value={JSON.stringify(Notifier.abi)} /><br />
-        <em>TODO: trim ABI to only include no-administrative functions</em>
-      </p>
+        <p>Contract address: <strong><a href={`https://testnet.etherscan.io/address/${Notifier.address}`} target="_blank">{Notifier.address}</a></strong></p>
 
-      <p>Adopts <strong>IoT Standard v0.1 Draft</strong> <em>(Details to be published)</em>.</p>
+        <p>&nbsp;</p>
 
-      <h3>Stats</h3>
+        <p className="adopt">
+          Adopts <a href="https://github.com/uzyn/ethereum-service-standard" target="_blank"><strong>Ethereum Service Standard v0.1 Draft</strong></a>
+        </p>
+      </section>
 
-      <dl>
-        <dt>Balance on contract</dt>
-        <dd><DisplayEth wei={web3.eth.getBalance(Notifier.address)} /></dd>
-        <dt>Spent balance (earned available revenue)</dt>
-        <dd><DisplayEth wei={Notifier.spentBalance()} /></dd>
-        <dt>Total available ETH on users' accounts</dt>
-        <dd><DisplayEth wei={Notifier.availableBalance()} /></dd>
-        <dt>Total ETH currently on-hold</dt>
-        <dd><DisplayEth wei={Notifier.onholdBalance()} /></dd>
-        <dt>Tasks received</dt>
-        <dd>{Notifier.tasksCount().toString()}</dd>
-      </dl>
+      <section className="main-panel col-md-7">
+        <h3>Stats</h3>
+        <dl>
+          <dt>Balance on contract</dt>
+          <dd><DisplayEth wei={web3.eth.getBalance(Notifier.address)} /></dd>
+          <dt>Spent balance (earned available revenue)</dt>
+          <dd><DisplayEth wei={Notifier.spentBalance()} /></dd>
+          <dt>Total available ETH on users' accounts</dt>
+          <dd><DisplayEth wei={Notifier.availableBalance()} /></dd>
+          <dt>Total ETH currently on-hold</dt>
+          <dd><DisplayEth wei={Notifier.onholdBalance()} /></dd>
+          <dt>Tasks received</dt>
+          <dd>{Notifier.tasksCount().toString()}</dd>
+        </dl>
 
-      <h3>Transactions</h3>
-      <p>View raw transactions from <a href={`https://testnet.etherscan.io/address/${Notifier.address}`} target="_blank">Etherscan</a></p>
+        <p>Application Binary Interface (ABI): <br />
+          <textarea name="Notifier.abi" readOnly value={JSON.stringify(Notifier.abi)} />
+        </p>
+
+        <h3>Transactions</h3>
+        <p>View raw transactions from <a href={`https://testnet.etherscan.io/address/${Notifier.address}`} target="_blank">Etherscan</a></p>
+      </section>
     </div>
   );
 }
