@@ -11,20 +11,29 @@ body {
   color: #444;
 }
 
+h1 {
+  color: #000;
+}
+
+h2 {
+  color: #333;
+}
+
+h3 {
+  color: #666;
+}
+
+h4 {
+  color: #888;
+}
+
 .intro-panel {
   text-align: center;
-  padding-top: 100px;
+  padding-top: 50px;
+  font-weight: 300;
 
-  h1 {
-    color: #000;
-  }
-
-  h2 {
-    color: #333;
-  }
-
-  h4 {
-    color: #888;
+  .logo {
+    max-height: 300px;
   }
 
   .adopt {
@@ -33,12 +42,47 @@ body {
 }
 
 .main-panel {
-  // background-color: rgba(7, 170, 201, 0.8);
+  color: #333;
+  font-weight: 500;
+}
+
+table {
+  th, td {
+    padding-top: 0.1em;
+    padding-bottom: 0.1em;
+  }
+
+  th {
+    font-weight: 500;
+  }
+}
+
+.stats-table {
+  td {
+    text-align: right;
+    color: #666;
+    font-weight: 300;
+  }
+}
+
+.table-params {
+  margin-top: 1.0em;
+  font-size: 0.9em;
+  td {
+    padding-bottom: 0.4em;
+  }
+}
+
+li {
+  margin: 1em 0;
 }
 
 textarea {
   width: 100%;
-  height: 10em;
+  height: 6em;
+  font-size: 0.8em;
+  font-weight: 300;
+  font-color: #999;
 }
 
 footer {
@@ -47,5 +91,6 @@ footer {
   font-size: 0.9em;
   margin-left: -15px;
   margin-right: -15px;
-  padding: 30px;
+  padding: 50px;
+  font-weight: 300;
 }
