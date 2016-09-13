@@ -7,7 +7,7 @@ export default function NotifierComponent() {
   return (
     <div className="Notifier row">
       <section className="intro-panel col-md-5">
-        <img src="/img/eth-notifier-logo.svg" alt="eth-notifier" className="logo" />
+        <img src="./img/eth-notifier-logo.svg" alt="eth-notifier" className="logo" />
         <h1>ETH Notifier</h1>
 
         <h2>Sends SMS from Ethereum</h2>
