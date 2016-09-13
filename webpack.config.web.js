@@ -23,7 +23,9 @@ module.exports = {
         from: '**/*',
         to: path.resolve(__dirname, 'build'),
       },
-    ]),
+    ], {
+      copyUnmodified: true,
+    }),
   ],
   module: {
     preLoaders: [
@@ -46,6 +48,10 @@ module.exports = {
         test: /\.jsx?$/,
         exclude: /(node_modules|bower_components)/,
         loaders: ['babel'],
+      },
+      {
+        test: /\.less$/,
+        loader: 'style!css!less',
       },
     ],
   },
