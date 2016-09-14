@@ -1,7 +1,8 @@
 import 'library/owned.sol';
 import 'library/withAccounts.sol';
+import 'library/withEncryption.sol';
 
-contract Notifier is owned, withAccounts {
+contract Notifier is owned, withAccounts, withEncryption {
   uint public minEthPerNotification = 0.03 ether; // ~ USD 0.3
 
   struct Task {
