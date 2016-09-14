@@ -5,7 +5,6 @@
  * and performs actions accordingly
  */
 const { Notifier } = require('../contract/.deployed');
-// const config = require('config');
 const db = require('./component/db');
 const sms = require('./component/sms');
 const xipfs = require('../lib/xipfs');
