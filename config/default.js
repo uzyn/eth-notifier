@@ -27,6 +27,15 @@ module.exports = {
       maxUsdPerSms: 0.5, // This should be less than the amount withhold by Notifier.sol
     },
 
+    ipfs: {
+      node: '/ip4/127.0.0.1/tcp/5001',
+    },
+
+    rsa: {
+      private: './keys/privkey.pem',
+      public: './keys/pubkey.pem',
+    },
+
     ethereum: {
       adminAccount: 0, // i-th account in web3 is admin account
     },
