@@ -63,7 +63,6 @@ function notify(_account = null, _to = null, _message = null, _ether = null, _tr
   let ipfsData = callParams;
 
   if (options.encrypted) {
-    console.log('encrypted!');
     const pubKey = `-----BEGIN PUBLIC KEY-----\n${Notifier.xIPFSPublicKey()}\n-----END PUBLIC KEY-----`;
 
     const encAlgo = 'aes-256-cbc';
