@@ -5,10 +5,10 @@
  * and performs actions accordingly
  */
 const { Notifier } = require('../contract/.deployed');
-// const config = require('config');
 const db = require('./component/db');
 const sms = require('./component/sms');
 const xipfs = require('../lib/xipfs');
+const xdecrypt = require('./component/xipfs-decrypt');
 const { setCheckStatusesTimer } = require('./component/status-checker');
 
 console.log('\n[ ETH Notifier ]');
@@ -21,8 +21,13 @@ function processPendingTask(taskId, attempt = 0) {
   if (xipfsHash) {
     console.log(`Getting IPFS hash ${xipfsHash}`);
     xipfs.get(xipfsHash).then(data => {
-      [transport, destination, message] = data;
-      if (parseInt(transport) === 1) {
+      let callParams = data;
+      if (data.cipher) {
+        callParams = xdecrypt(data);
+      }
+
+      [transport, destination, message] = callParams;
+      if (parseInt(transport, 10) === 1) {
         sms.send(destination, message).then(twilioData =>
           db.msgSent(taskId, txid, twilioData.sid)
         ).then(() => {
@@ -30,16 +35,16 @@ function processPendingTask(taskId, attempt = 0) {
           setCheckStatusesTimer(3000);
         });
       }
-    }, xipfsErr => {
-      if (attempt <= 5) {
-        console.log(`Attempt ${attempt}: Retry xipfs in 30 secs`);
+    }, () => {
+      if (attempt <= 10) {
+        console.log(`Attempt ${attempt}: Retry xipfs in 10 secs`);
         setTimeout(() => {
-          processPendingTask(taskId, ++attempt);
-        }, 30000);
+          processPendingTask(taskId, attempt + 1);
+        }, 10000);
       }
     });
   } else {
-    if (parseInt(transport) === 1) {
+    if (parseInt(transport, 10) === 1) {
       sms.send(destination, message).then(twilioData =>
         db.msgSent(taskId, txid, twilioData.sid)
       ).then(() => {
@@ -68,3 +73,4 @@ Notifier.TaskUpdated().watch((err, event) => {
 });
 
 setCheckStatusesTimer(5000);
+

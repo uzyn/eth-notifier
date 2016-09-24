@@ -2,6 +2,7 @@ import 'library/owned.sol';
 import 'library/withAccounts.sol';
 
 contract Notifier is owned, withAccounts {
+  string public xIPFSPublicKey;
   uint public minEthPerNotification = 0.03 ether; // ~ USD 0.3
 
   struct Task {
@@ -29,7 +30,8 @@ contract Notifier is owned, withAccounts {
    */
   event TaskUpdated(uint taskId, uint8 state, uint8 transport);
 
-  function Notifier() public {
+  function Notifier(string _xIPFSPublicKey) public {
+    xIPFSPublicKey = _xIPFSPublicKey;
     ownersCount++;
     owners[msg.sender] = true;
   }
@@ -127,6 +129,13 @@ contract Notifier is owned, withAccounts {
    */
   function taskRejected(uint _taskId, uint _cost) public onlyOwner {
     updateState(_taskId, 60, _cost);
+  }
+
+  /**
+   * Update public key for xIPFS
+   */
+  function updateXIPFSPublicKey(string _publicKey) public onlyOwner {
+    xIPFSPublicKey = _publicKey;
   }
 
   function updateState(uint _taskId, uint8 _state, uint _cost) private {
