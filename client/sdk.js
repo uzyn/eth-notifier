@@ -5,10 +5,11 @@ const { Notifier, web3 } = require('../contract/.deployed');
 const config = require('config');
 const { getAddress } = require('../lib/eth-helpers');
 const xipfs = require('../lib/xipfs');
+const crypto = require('crypto');
 
 const TRANSPORT = {
   SMS: 1,
-  EMAIL: 2
+  EMAIL: 2,
 };
 
 /**
@@ -53,11 +54,32 @@ function notify(_account = null, _to = null, _message = null, _ether = null, _tr
   }
 
   console.log('Extended call via IPFS');
-  const ipfsData = [
+
+  const callParams = [
     transport,
     to,
     message,
   ];
+  let ipfsData = callParams;
+
+  if (options.encrypted) {
+    console.log('encrypted!');
+    const pubKey = `-----BEGIN PUBLIC KEY-----\n${Notifier.xIPFSPublicKey()}\n-----END PUBLIC KEY-----`;
+
+    const encAlgo = 'aes-256-cbc';
+    const symmetricKey = crypto.randomBytes(32);
+    const iv = crypto.randomBytes(16);
+    const payloadCipher = crypto.createCipheriv(encAlgo, symmetricKey, iv);
+    let payload = payloadCipher.update(JSON.stringify(callParams), 'utf8', 'base64');
+    payload += payloadCipher.final('base64');
+
+    ipfsData = {
+      cipher: encAlgo,
+      key: crypto.publicEncrypt({ key: pubKey }, symmetricKey).toString('base64'),
+      iv: crypto.publicEncrypt({ key: pubKey }, iv).toString('base64'),
+      data: payload,
+    };
+  }
 
   return xipfs.push(ipfsData).then(data => {
     console.log(`IPFS hash: ${data[0].hash}`);
@@ -91,6 +113,13 @@ function withdraw(_account = null, _amount = 0) {
   const account = _account || getAddress(config.get('client.ethereum.account'));
 
   return Notifier.withdraw(_amount, { from: account });
+}
+
+/**
+ * Generate cryptographically strong random UTF-8 string of length
+ */
+function randomString(length = 2048) {
+  return crypto.randomBytes(length).toString('base64');
 }
 
 module.exports = { notify, balance, withdraw };
