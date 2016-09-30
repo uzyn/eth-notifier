@@ -17,8 +17,9 @@ function processRefund(dbRow, usdPrice) {
   let ethPrice = usdPrice / config.get('provider.ethUsd');
   ethPrice = Math.ceil(ethPrice * 10000) / 10000;
   const weiPrice = web3.toWei(ethPrice, 'ether');
-  const userAddress = Notifier.tasks[dbRow.taskid];
-  console.log(dbRow.txid, usdPrice, weiPrice);
+  const task = Notifier.tasks(dbRow.taskid);
+  const [, , , , userAddress] = task;
+  console.log(dbRow.txid, usdPrice, weiPrice, userAddress);
 
   const promises = [
     new Promise((resolve, reject) => {
@@ -34,7 +35,7 @@ function processRefund(dbRow, usdPrice) {
     }),
 
     new Promise((resolve, reject) => {
-      Notifier.returnFund(userAddress, {
+      Notifier.returnFund(userAddress, 0, {
         from: web3.eth.accounts[config.get('provider.ethereum.adminAccount')],
         gas: 1000000,
       }, err => {
@@ -64,20 +65,21 @@ function checkStatuses() {
     checkingStatuses = false;
     const promises = [];
     statuses.forEach(status => {
-      if (status.price_unit !== 'USD') {
-        console.log(`Unknown price unit returned from Twilio – ${status.price_unit}`);
+      if (status && status.price_unit) {
+        if (status.price_unit !== 'USD') {
+          console.log(`Unknown price unit returned from Twilio – ${status.price_unit}`);
+        }
+        const dbRow = dbRows.find(row => row.twilioSid === status.sid);
+        let priceUsd = Math.abs(parseFloat(status.price));
+        if (isNaN(priceUsd)) {
+          priceUsd = 0;
+        }
+        promises.push(processRefund(dbRow, priceUsd));
       }
-      const dbRow = dbRows.find(row => row.twilioSid === status.sid);
-
-      let priceUsd = Math.abs(parseFloat(status.price));
-      if (isNaN(priceUsd)) {
-        priceUsd = 0;
-      }
-      promises.push(processRefund(dbRow, priceUsd));
     });
 
     Promise.all(promises).then(() => {
-      let interval = 60000; // 1 minute
+      let interval = 30000; // 0.5 minute
       if (dbRows.length === 0) {
         interval = 15 * 60000; // 15 minutes
       }
@@ -88,7 +90,7 @@ function checkStatuses() {
   }, err => {
     console.log(err);
     checkingStatuses = false;
-    setCheckStatusesTimer(60000);
+    setCheckStatusesTimer(30000);
   });
 }
 

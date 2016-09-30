@@ -72,5 +72,5 @@ Notifier.TaskUpdated().watch((err, event) => {
   return true;
 });
 
-setCheckStatusesTimer(5000);
+setCheckStatusesTimer(3000);
 
