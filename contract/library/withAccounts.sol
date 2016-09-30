@@ -1,6 +1,6 @@
-import "./owned.sol";
+import "./withOwners.sol";
 
-contract withAccounts is owned {
+contract withAccounts is withOwners {
   uint defaultTimeoutPeriod = 1 weeks; // if locked fund is not settled in a week, automatically refund user
 
   struct AccountTx {

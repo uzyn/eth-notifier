@@ -1,9 +1,9 @@
-import 'library/owned.sol';
+import 'library/withOwners.sol';
 import 'library/withAccounts.sol';
 
-contract Notifier is owned, withAccounts {
+contract Notifier is withOwners, withAccounts {
   string public xIPFSPublicKey;
-  uint public minEthPerNotification = 0.03 ether; // ~ USD 0.3
+  uint public minEthPerNotification = 0.03 ether;
 
   struct Task {
     string xipfs; // Hash for IPFS-augmented calls

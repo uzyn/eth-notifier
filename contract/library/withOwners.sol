@@ -1,4 +1,4 @@
-contract owned {
+contract withOwners {
   uint8 public ownersCount = 0;
   mapping (address => bool) public owners;
 
