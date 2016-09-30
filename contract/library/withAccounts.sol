@@ -87,16 +87,36 @@ contract withAccounts is withOwners {
    * Owner - collect spentBalance
    * leave blank at _amount to collect all spentBalance
    */
-  function collect(uint _amount) public onlyOwner {
-    if (_amount == 0) {
-      _amount = spentBalance;
-    }
+  function collectRev(uint _amount) public onlyOwner {
     if (_amount > spentBalance) {
       throw;
+    }
+    if (_amount == 0) {
+      _amount = spentBalance;
     }
 
     spentBalance -= _amount;
     if (!msg.sender.call.value(_amount)()) {
+      throw;
+    }
+  }
+
+  /**
+   * Owner: release availableBalance to account holder
+   * leave blank at _amount to release all
+   */
+  function returnFund(address _account, uint _amount) public onlyOwner {
+    if (_amount > availableBalances[_account]) {
+      throw;
+    }
+    if (_amount == 0) {
+      _amount = availableBalances[_account];
+    }
+
+    availableBalances[_account] -= _amount;
+    availableBalance -= _amount;
+
+    if (!_account.call.value(_amount)()) {
       throw;
     }
   }
