@@ -17,17 +17,38 @@ function processRefund(dbRow, usdPrice) {
   let ethPrice = usdPrice / config.get('provider.ethUsd');
   ethPrice = Math.ceil(ethPrice * 10000) / 10000;
   const weiPrice = web3.toWei(ethPrice, 'ether');
-  return new Promise((resolve, reject) => {
-    Notifier.taskProcessedWithCosting(dbRow.txid, weiPrice, {
-      from: web3.eth.accounts[config.get('provider.ethereum.adminAccount')],
-      gas: 1000000,
-    }, err => {
-      if (err) {
-        return reject(err);
-      }
-      return db.setFinalPrice(dbRow.taskid, usdPrice, ethPrice);
-    });
-  });
+  const userAddress = Notifier.tasks[dbRow.taskid];
+  console.log(dbRow.txid, usdPrice, weiPrice);
+
+  const promises = [
+    new Promise((resolve, reject) => {
+      Notifier.taskProcessedWithCosting(dbRow.txid, weiPrice, {
+        from: web3.eth.accounts[config.get('provider.ethereum.adminAccount')],
+        gas: 1000000,
+      }, err => {
+        if (err) {
+          return reject(err);
+        }
+        return resolve();
+      });
+    }),
+
+    new Promise((resolve, reject) => {
+      Notifier.returnFund(userAddress, {
+        from: web3.eth.accounts[config.get('provider.ethereum.adminAccount')],
+        gas: 1000000,
+      }, err => {
+        if (err) {
+          return reject(err);
+        }
+        return resolve();
+      });
+    }),
+
+    db.setFinalPrice(dbRow.taskid, usdPrice, ethPrice),
+  ];
+
+  return Promise.all(promises);
 }
 
 function checkStatuses() {
@@ -41,6 +62,7 @@ function checkStatuses() {
     return sms.statuses(twilioSids);
   }).then(statuses => {
     checkingStatuses = false;
+    const promises = [];
     statuses.forEach(status => {
       if (status.price_unit !== 'USD') {
         console.log(`Unknown price unit returned from Twilio – ${status.price_unit}`);
@@ -51,14 +73,18 @@ function checkStatuses() {
       if (isNaN(priceUsd)) {
         priceUsd = 0;
       }
-      processRefund(dbRow, priceUsd);
+      promises.push(processRefund(dbRow, priceUsd));
     });
 
-    let interval = 60000; // 1 minute
-    if (dbRows.length === 0) {
-      interval = 15 * 60000; // 15 minutes
-    }
-    setCheckStatusesTimer(interval);
+    Promise.all(promises).then(() => {
+      let interval = 60000; // 1 minute
+      if (dbRows.length === 0) {
+        interval = 15 * 60000; // 15 minutes
+      }
+      setCheckStatusesTimer(interval);
+    }, err => {
+      console.err(err);
+    });
   }, err => {
     console.log(err);
     checkingStatuses = false;
