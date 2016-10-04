@@ -87,7 +87,7 @@ contract withAccounts is withOwners {
    * Owner - collect spentBalance
    * leave blank at _amount to collect all spentBalance
    */
-  function collectRev(uint _amount) public onlyOwner {
+  function collectRev(uint _amount) public onlyOwners {
     if (_amount > spentBalance) {
       throw;
     }
@@ -105,7 +105,7 @@ contract withAccounts is withOwners {
    * Owner: release availableBalance to account holder
    * leave blank at _amount to release all
    */
-  function returnFund(address _account, uint _amount) public onlyOwner {
+  function returnFund(address _account, uint _amount) public onlyManagers {
     if (_amount > availableBalances[_account]) {
       throw;
     }

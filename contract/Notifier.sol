@@ -103,7 +103,7 @@ contract Notifier is withOwners, withAccounts {
  * ---------------
  */
 
-  function updateMinEthPerNotification(uint _newMin) public onlyOwner{
+  function updateMinEthPerNotification(uint _newMin) public onlyManagers {
     minEthPerNotification = _newMin;
   }
 
@@ -111,7 +111,7 @@ contract Notifier is withOwners, withAccounts {
    * Mark task as processed, but no costing yet
    * This is an optional state
    */
-  function taskProcessedNoCosting(uint _taskId) public onlyOwner {
+  function taskProcessedNoCosting(uint _taskId) public onlyManagers {
     updateState(_taskId, 20, 0);
   }
 
@@ -119,7 +119,7 @@ contract Notifier is withOwners, withAccounts {
    * Mark task as processed, and process funds + costings
    * This is a FINAL state
    */
-  function taskProcessedWithCosting(uint _taskId, uint _cost) public onlyOwner {
+  function taskProcessedWithCosting(uint _taskId, uint _cost) public onlyManagers {
     updateState(_taskId, 50, _cost);
   }
 
@@ -127,14 +127,14 @@ contract Notifier is withOwners, withAccounts {
    * Mark task as rejected or error-ed,  and processed funds + costings
    * This is a FINAL state
    */
-  function taskRejected(uint _taskId, uint _cost) public onlyOwner {
+  function taskRejected(uint _taskId, uint _cost) public onlyManagers {
     updateState(_taskId, 60, _cost);
   }
 
   /**
    * Update public key for xIPFS
    */
-  function updateXIPFSPublicKey(string _publicKey) public onlyOwner {
+  function updateXIPFSPublicKey(string _publicKey) public onlyManagers {
     xIPFSPublicKey = _publicKey;
   }
 
