@@ -3,7 +3,7 @@ import 'library/withAccounts.sol';
 
 contract Notifier is withOwners, withAccounts {
   string public xIPFSPublicKey;
-  uint public minEthPerNotification = 0.03 ether;
+  uint public minEthPerNotification = 0.02 ether;
 
   struct Task {
     string xipfs; // Hash for IPFS-augmented calls

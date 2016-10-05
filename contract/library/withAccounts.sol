@@ -1,7 +1,7 @@
 import "./withOwners.sol";
 
 contract withAccounts is withOwners {
-  uint defaultTimeoutPeriod = 1 weeks; // if locked fund is not settled in a week, automatically refund user
+  uint defaultTimeoutPeriod = 1 days; // if locked fund is not settled within timeout period, account holders can refund themselves
 
   struct AccountTx {
     uint txid;

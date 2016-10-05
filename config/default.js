@@ -11,7 +11,7 @@ module.exports = {
    */
   provider: {
     sqliteDatabase: './serverdb.sqlite3',
-    ethUsd: 11, // 1 ETH = ? USD
+    ethUsd: 12.5, // 1 ETH = ? USD
 
     /**
      * Twilio account details
