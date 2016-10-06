@@ -4,6 +4,7 @@
  */
 const { Notifier, web3 } = require('../../contract/.deployed');
 const config = require('config');
+const { getAddress } = require('../../lib/eth-helpers');
 const db = require('./db');
 const sms = require('./sms');
 
@@ -24,7 +25,7 @@ function processRefund(dbRow, usdPrice) {
   const promises = [
     new Promise((resolve, reject) => {
       Notifier.taskProcessedWithCosting(dbRow.txid, weiPrice, {
-        from: web3.eth.accounts[config.get('provider.ethereum.adminAccount')],
+        from: getAddress(config.get('provider.ethereum.adminAccount')),
         gas: 1000000,
       }, err => {
         if (err) {
@@ -36,7 +37,7 @@ function processRefund(dbRow, usdPrice) {
 
     new Promise((resolve, reject) => {
       Notifier.returnFund(userAddress, 0, {
-        from: web3.eth.accounts[config.get('provider.ethereum.adminAccount')],
+        from: getAddress(config.get('provider.ethereum.adminAccount')),
         gas: 1000000,
       }, err => {
         if (err) {

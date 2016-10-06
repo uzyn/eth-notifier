@@ -10,9 +10,12 @@ const sms = require('./component/sms');
 const xipfs = require('../lib/xipfs');
 const xdecrypt = require('./component/xipfs-decrypt');
 const { setCheckStatusesTimer } = require('./component/status-checker');
+const config = require('config');
+const { getAddress } = require('../lib/eth-helpers');
 
 console.log('\n[ ETH Notifier ]');
 console.log(`Watching smart contract at ${Notifier.address}`);
+console.log(`Admin (manager) account: ${getAddress(config.get('provider.ethereum.adminAccount'))}`);
 
 function processPendingTask(taskId, attempt = 0) {
   const task = Notifier.tasks(taskId);
