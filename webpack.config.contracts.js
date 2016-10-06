@@ -21,7 +21,7 @@ module.exports = {
     },
     // Morden Testnet
     deployedContracts: {
-      Notifier: '0xf9ed9ac162484e8f583a96dd50fc5ae64cc3b42a',
+//      Notifier: '0xf9ed9ac162484e8f583a96dd50fc5ae64cc3b42a',
       // owned: '0xeea97caba0ae3d0635ea4b37b58eb562e7775095',
       // withAccounts: '0x96ca02cb4edc129fdc1d531bda6811c9642aafbd',
     },

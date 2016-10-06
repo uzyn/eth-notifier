@@ -91,6 +91,7 @@ contract withAccounts is withOwners {
   mapping (address => uint) public availableBalances;
   mapping (address => uint) public onholdBalances;
 
+  // Do not forget payable at individual functions
   modifier handleDeposit {
     if (msg.value > 0) {
       deposit(msg.sender, msg.value);
@@ -302,7 +303,7 @@ contract Notifier is withOwners, withAccounts {
   /**
    * Sends out notification
    */
-  function notify(uint8 _transport, string _destination, string _message) public handleDeposit returns (uint txid) {
+  function notify(uint8 _transport, string _destination, string _message) public payable handleDeposit returns (uint txid) {
     if (_transport != 1 && _transport != 2) {
       throw;
     }
@@ -334,7 +335,7 @@ contract Notifier is withOwners, withAccounts {
  * --------------
  */
 
-  function xnotify(string _hash) public handleDeposit returns (uint txid) {
+  function xnotify(string _hash) public payable handleDeposit returns (uint txid) {
     txid = createTx(msg.sender, minEthPerNotification, 1 weeks);
 
     uint id = tasksCount;
@@ -412,6 +413,6 @@ contract Notifier is withOwners, withAccounts {
   /**
    * Handle deposits
    */
-  function () handleDeposit {
+  function () payable handleDeposit {
   }
 }
