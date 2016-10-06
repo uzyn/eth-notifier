@@ -67,18 +67,18 @@ contract withAccounts is withOwners {
   uint defaultTimeoutPeriod = 1 days; // if locked fund is not settled within timeout period, account holders can refund themselves
 
   struct AccountTx {
-    uint txid;
+    uint32 txid;
     uint timeCreated;
     uint timeSettled;
     uint timeoutPeriod;
     address user;
-    uint amountHeld;
-    uint amountSpent;
+    uint128 amountHeld;
+    uint128 amountSpent;
     uint8 state; // 1: on-hold/locked; 2: processed and refunded;
   }
 
-  uint public txCount = 0;
-  mapping (uint => AccountTx) public accountTxs;
+  uint32 public txCount = 0;
+  mapping (uint32 => AccountTx) public accountTxs;
   //mapping (address => uint) public userTxs;
 
   /**
@@ -136,7 +136,7 @@ contract withAccounts is withOwners {
    * can be called by anyone, not only account owner or provider
    * If an AccountTx is already timed out, return balance to the user's available balance.
    */
-  function checkTimeout(uint _txid) public {
+  function checkTimeout(uint32 _txid) public {
     if (
       accountTxs[_txid].state != 1 ||
       (now - accountTxs[_txid].timeCreated) < accountTxs[_txid].timeoutPeriod
@@ -206,7 +206,7 @@ contract withAccounts is withOwners {
   /**
    * Creates a transaction and hold the funds for _timeoutPeriod
    */
-  function createTx(address _user, uint _amount, uint _timeoutPeriod) internal returns (uint txid) {
+  function createTx(address _user, uint128 _amount, uint _timeoutPeriod) internal returns (uint32 txid) {
     if (_amount > availableBalances[_user]) {
       throw;
     }
@@ -237,7 +237,7 @@ contract withAccounts is withOwners {
     return txid;
   }
 
-  function settle(uint _txid, uint _amountSpent) internal {
+  function settle(uint32 _txid, uint128 _amountSpent) internal {
     if (accountTxs[_txid].state != 1 || _amountSpent > accountTxs[_txid].amountHeld) {
       throw;
     }
@@ -261,7 +261,7 @@ contract withAccounts is withOwners {
 }
 contract Notifier is withOwners, withAccounts {
   string public xIPFSPublicKey;
-  uint public minEthPerNotification = 0.02 ether;
+  uint128 public minEthPerNotification = 0.02 ether;
 
   struct Task {
     string xipfs; // Hash for IPFS-augmented calls
@@ -272,7 +272,7 @@ contract Notifier is withOwners, withAccounts {
     string message;
 
     address sender;
-    uint txid; // AccountTxid (dealing with payment)
+    uint32 txid; // AccountTxid (dealing with payment)
     uint8 state; // 10: pending
                  // 20: processed, but tx still open
                  // [ FINAL STATES >= 50 ]
@@ -280,13 +280,13 @@ contract Notifier is withOwners, withAccounts {
                  // 60: rejected or error-ed, costing done, tx settled
   }
 
-  mapping(uint => Task) public tasks;
-  uint public tasksCount = 0;
+  mapping(uint32 => Task) public tasks;
+  uint32 public tasksCount = 0;
 
   /**
    * Events to be picked up by API
    */
-  event TaskUpdated(uint taskId, uint8 state, uint8 transport);
+  event TaskUpdated(uint32 taskId, uint8 state, uint8 transport);
 
   function Notifier(string _xIPFSPublicKey) public {
     xIPFSPublicKey = _xIPFSPublicKey;
@@ -303,14 +303,14 @@ contract Notifier is withOwners, withAccounts {
   /**
    * Sends out notification
    */
-  function notify(uint8 _transport, string _destination, string _message) public payable handleDeposit returns (uint txid) {
+  function notify(uint8 _transport, string _destination, string _message) public payable handleDeposit returns (uint32 txid) {
     if (_transport != 1 && _transport != 2) {
       throw;
     }
 
-    txid = createTx(msg.sender, minEthPerNotification, 1 weeks);
+    txid = createTx(msg.sender, minEthPerNotification, 1 days);
 
-    uint id = tasksCount;
+    uint32 id = tasksCount;
     tasks[id] = Task({
       xipfs: '',
       transport: _transport, // 1: sms, 2: email
@@ -335,10 +335,10 @@ contract Notifier is withOwners, withAccounts {
  * --------------
  */
 
-  function xnotify(string _hash) public payable handleDeposit returns (uint txid) {
-    txid = createTx(msg.sender, minEthPerNotification, 1 weeks);
+  function xnotify(string _hash) public payable handleDeposit returns (uint32 txid) {
+    txid = createTx(msg.sender, minEthPerNotification, 1 days);
 
-    uint id = tasksCount;
+    uint32 id = tasksCount;
     tasks[id] = Task({
       xipfs: _hash,
       transport: 1, // sms
@@ -361,7 +361,7 @@ contract Notifier is withOwners, withAccounts {
  * ---------------
  */
 
-  function updateMinEthPerNotification(uint _newMin) public onlyManagers {
+  function updateMinEthPerNotification(uint128 _newMin) public onlyManagers {
     minEthPerNotification = _newMin;
   }
 
@@ -369,7 +369,7 @@ contract Notifier is withOwners, withAccounts {
    * Mark task as processed, but no costing yet
    * This is an optional state
    */
-  function taskProcessedNoCosting(uint _taskId) public onlyManagers {
+  function taskProcessedNoCosting(uint32 _taskId) public onlyManagers {
     updateState(_taskId, 20, 0);
   }
 
@@ -377,7 +377,7 @@ contract Notifier is withOwners, withAccounts {
    * Mark task as processed, and process funds + costings
    * This is a FINAL state
    */
-  function taskProcessedWithCosting(uint _taskId, uint _cost) public onlyManagers {
+  function taskProcessedWithCosting(uint32 _taskId, uint128 _cost) public onlyManagers {
     updateState(_taskId, 50, _cost);
   }
 
@@ -385,18 +385,18 @@ contract Notifier is withOwners, withAccounts {
    * Mark task as rejected or error-ed,  and processed funds + costings
    * This is a FINAL state
    */
-  function taskRejected(uint _taskId, uint _cost) public onlyManagers {
+  function taskRejected(uint32 _taskId, uint128 _cost) public onlyManagers {
     updateState(_taskId, 60, _cost);
   }
 
   /**
    * Update public key for xIPFS
    */
-  function updateXIPFSPublicKey(string _publicKey) public onlyManagers {
+  function updateXIPFSPublicKey(string _publicKey) public onlyOwners {
     xIPFSPublicKey = _publicKey;
   }
 
-  function updateState(uint _taskId, uint8 _state, uint _cost) private {
+  function updateState(uint32 _taskId, uint8 _state, uint128 _cost) private {
     if (tasks[_taskId].state == 0 || tasks[_taskId].state >= 50) {
       throw;
     }
