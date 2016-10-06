@@ -289,7 +289,7 @@ contract Notifier is withOwners, withAccounts {
   /**
    * Events to be picked up by API
    */
-  event TaskUpdated(uint32 taskId, uint8 state, uint8 transport);
+  event TaskUpdated(uint32 taskId, uint8 state);
 
   function Notifier(string _xIPFSPublicKey) public {
     xIPFSPublicKey = _xIPFSPublicKey;
@@ -324,7 +324,7 @@ contract Notifier is withOwners, withAccounts {
       txid: txid,
       state: 10, // pending
     });
-    TaskUpdated(id, 10, 1);
+    TaskUpdated(id, 10);
     ++tasksCount;
 
     return txid;
@@ -352,7 +352,7 @@ contract Notifier is withOwners, withAccounts {
       txid: txid,
       state: 10, // pending
     });
-    TaskUpdated(id, 10, 1);
+    TaskUpdated(id, 10);
     ++tasksCount;
 
     return txid;
@@ -410,7 +410,7 @@ contract Notifier is withOwners, withAccounts {
     if (_state >= 50) {
       settle(tasks[_taskId].txid, _cost);
     }
-    TaskUpdated(_taskId, _state, tasks[_taskId].transport);
+    TaskUpdated(_taskId, _state);
   }
 
   /**
