@@ -69,8 +69,6 @@ contract withAccounts is withOwners {
   struct AccountTx {
     uint32 txid;
     uint timeCreated;
-    uint timeSettled;
-    uint timeoutPeriod;
     address user;
     uint128 amountHeld;
     uint128 amountSpent;
@@ -139,12 +137,23 @@ contract withAccounts is withOwners {
   function checkTimeout(uint32 _txid) public {
     if (
       accountTxs[_txid].state != 1 ||
-      (now - accountTxs[_txid].timeCreated) < accountTxs[_txid].timeoutPeriod
+      (now - accountTxs[_txid].timeCreated) < defaultTimeoutPeriod
     ) {
       throw;
     }
 
     settle(_txid, 0); // no money is spent, settle the tx
+  }
+
+  /**
+   * Update defaultTimeoutPeriod
+   */
+  function updateDefaultTimeoutPeriod(uint _defaultTimeoutPeriod) public onlyOwners {
+    if (_defaultTimeoutPeriod < 1 hours) {
+      _defaultTimeoutPeriod = 1 hours;
+    }
+
+    defaultTimeoutPeriod = _defaultTimeoutPeriod;
   }
 
   /**
@@ -204,22 +213,17 @@ contract withAccounts is withOwners {
   }
 
   /**
-   * Creates a transaction and hold the funds for _timeoutPeriod
+   * Creates a transaction
    */
-  function createTx(address _user, uint128 _amount, uint _timeoutPeriod) internal returns (uint32 txid) {
+  function createTx(address _user, uint128 _amount) internal returns (uint32 txid) {
     if (_amount > availableBalances[_user]) {
       throw;
-    }
-    if (_timeoutPeriod == 0) {
-      _timeoutPeriod = defaultTimeoutPeriod;
     }
 
     txid = txCount;
     accountTxs[txid] = AccountTx({
       txid: txid,
       timeCreated: now,
-      timeSettled: 0, // not yet settled
-      timeoutPeriod: _timeoutPeriod,
       user: _user,
       amountHeld: _amount,
       amountSpent: 0,
@@ -246,7 +250,6 @@ contract withAccounts is withOwners {
     // because if provider has actual update, it should stand
 
     accountTxs[_txid].amountSpent = _amountSpent;
-    accountTxs[_txid].timeSettled = now;
     accountTxs[_txid].state = 2; // processed and refunded;
 
     spentBalance += _amountSpent;
@@ -308,7 +311,7 @@ contract Notifier is withOwners, withAccounts {
       throw;
     }
 
-    txid = createTx(msg.sender, minEthPerNotification, 1 days);
+    txid = createTx(msg.sender, minEthPerNotification);
 
     uint32 id = tasksCount;
     tasks[id] = Task({
@@ -336,7 +339,7 @@ contract Notifier is withOwners, withAccounts {
  */
 
   function xnotify(string _hash) public payable handleDeposit returns (uint32 txid) {
-    txid = createTx(msg.sender, minEthPerNotification, 1 days);
+    txid = createTx(msg.sender, minEthPerNotification);
 
     uint32 id = tasksCount;
     tasks[id] = Task({
