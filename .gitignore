@@ -28,7 +28,7 @@ node_modules
 .tmp
 
 # App
-/serverdb.sqlite3
+*.sqlite3
 /contract/.deployed
 /config/local.js
 *.pem

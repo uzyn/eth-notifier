@@ -64,6 +64,9 @@ Notifier.TaskUpdated().watch((err, event) => {
     return false;
   }
 
+  console.log('[Event]');
+  console.log(event);
+
   const state = event.args.state.toNumber();
 
   if (state === 10) { // pending, send the message

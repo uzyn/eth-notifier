@@ -29,8 +29,10 @@ function processRefund(dbRow, usdPrice) {
         gas: 1000000,
       }, err => {
         if (err) {
+          console.log(err);
           return reject(err);
         }
+        console.log('taskProcessedWithCosting');
         return resolve();
       });
     }),
@@ -41,8 +43,10 @@ function processRefund(dbRow, usdPrice) {
         gas: 1000000,
       }, err => {
         if (err) {
+          console.log(err);
           return reject(err);
         }
+        console.log('returnFund');
         return resolve();
       });
     }),

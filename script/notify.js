@@ -11,7 +11,7 @@ const params = [
   `Hello from blockchain. This message is initiated on ${new Date().toISOString()}.`,
   {
     from: accounts[1],
-    value: web3.toWei(0.08, 'ether'),
+    value: web3.toWei(0.1, 'ether'),
     gas: 1000000,
   },
 ];
