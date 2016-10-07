@@ -88,12 +88,11 @@ contract withAccounts is withOwners {
 
   mapping (address => uint) public availableBalances;
   mapping (address => uint) public onholdBalances;
+  mapping (address => bool) public doNotAutoRefund;
 
   // Do not forget payable at individual functions
   modifier handleDeposit {
-    if (msg.value > 0) {
-      deposit(msg.sender, msg.value);
-    }
+    deposit(msg.sender, msg.value);
     _;
   }
 
@@ -109,6 +108,14 @@ contract withAccounts is withOwners {
   function getBalance() constant public returns (uint balance) {
     balance = availableBalances[msg.sender];
     return balance;
+  }
+
+  /**
+   * Deposit into other's account
+   * Useful for services that you wish to not hold funds and not having to keep refunding after every tx and wasting gas
+   */
+  function depositFor(address _address) public payable {
+    deposit(_address, msg.value);
   }
 
   /**
@@ -146,6 +153,17 @@ contract withAccounts is withOwners {
   }
 
   /**
+   * Sets doNotAutoRefundTo of caller's account to:
+   * true: stops auto refund after every single transaction
+   * false: proceeds with auto refund after every single transaction
+   *
+   * Manually use withdraw() to withdraw available funds
+   */
+  function setDoNotAutoRefundTo(bool _option) {
+    doNotAutoRefund[msg.sender] = _option;
+  }
+
+  /**
    * Update defaultTimeoutPeriod
    */
   function updateDefaultTimeoutPeriod(uint _defaultTimeoutPeriod) public onlyOwners {
@@ -177,9 +195,10 @@ contract withAccounts is withOwners {
   /**
    * Owner: release availableBalance to account holder
    * leave blank at _amount to release all
+   * set doNotAutoRefund to true to stop auto funds returning (keep funds on user's available balance account)
    */
   function returnFund(address _account, uint _amount) public onlyManagers {
-    if (_amount > availableBalances[_account]) {
+    if (doNotAutoRefund[_account] || _amount > availableBalances[_account]) {
       throw;
     }
     if (_amount == 0) {

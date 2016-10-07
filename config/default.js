@@ -10,8 +10,10 @@ module.exports = {
    * Configuration for service provider
    */
   provider: {
-    sqliteDatabase: './serverdb.sqlite3',
+    sqliteDatabase: './serverdb-{GENESISHASH}.sqlite3',
     ethUsd: 12.5, // 1 ETH = ? USD
+    pctMargin: 0.25, // % on top of cost - expressed in decimal
+    flatMarginInEth: 0.003, // to cover the gas price
 
     /**
      * Twilio account details

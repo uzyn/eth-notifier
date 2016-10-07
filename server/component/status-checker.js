@@ -15,12 +15,12 @@ let checkingStatuses = false;
 let setCheckStatusesTimer = null;
 
 function processRefund(dbRow, usdPrice) {
-  let ethPrice = usdPrice / config.get('provider.ethUsd');
-  ethPrice = Math.ceil(ethPrice * 10000) / 10000;
+  let ethPrice = usdPrice / config.get('provider.ethUsd') * (1 + config.get('provider.pctMargin')) + config.get('provider.flatMarginInEth');
+  ethPrice = Math.ceil(ethPrice * 1000000) / 1000000;
   const weiPrice = web3.toWei(ethPrice, 'ether');
   const task = Notifier.tasks(dbRow.taskid);
   const [, , , , userAddress] = task;
-  console.log(dbRow.txid, usdPrice, weiPrice, userAddress);
+  console.log(dbRow.txid, usdPrice, ethPrice, weiPrice, userAddress);
 
   const promises = [
     new Promise((resolve, reject) => {
@@ -29,20 +29,10 @@ function processRefund(dbRow, usdPrice) {
         gas: 1000000,
       }, err => {
         if (err) {
+          console.log(err);
           return reject(err);
         }
-        return resolve();
-      });
-    }),
-
-    new Promise((resolve, reject) => {
-      Notifier.returnFund(userAddress, 0, {
-        from: getAddress(config.get('provider.ethereum.adminAccount')),
-        gas: 1000000,
-      }, err => {
-        if (err) {
-          return reject(err);
-        }
+        console.log('taskProcessedWithCosting');
         return resolve();
       });
     }),
