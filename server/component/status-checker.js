@@ -37,20 +37,6 @@ function processRefund(dbRow, usdPrice) {
       });
     }),
 
-    new Promise((resolve, reject) => {
-      Notifier.returnFund(userAddress, 0, {
-        from: getAddress(config.get('provider.ethereum.adminAccount')),
-        gas: 1000000,
-      }, err => {
-        if (err) {
-          console.log(err);
-          return reject(err);
-        }
-        console.log('returnFund');
-        return resolve();
-      });
-    }),
-
     db.setFinalPrice(dbRow.taskid, usdPrice, ethPrice),
   ];
 

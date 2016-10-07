@@ -4,6 +4,15 @@
 const { Notifier, web3 } = require('../contract/.deployed');
 const accounts = web3.eth.accounts;
 const config = require('config');
+/*
+Notifier.setDoNotAutoRefundTo(true, {
+  from: accounts[1],
+  gas: 1000000,
+}, (err, res) => {
+  console.log(err);
+  console.log(res);
+});
+*/
 
 const params = [
   1,
@@ -26,3 +35,4 @@ Notifier.notify(params[0], params[1], params[2], params[3], (err, res) => {
   console.log(err);
   console.log(res);
 });
+

@@ -58,6 +58,26 @@ function processPendingTask(taskId, attempt = 0) {
   }
 }
 
+function processRefund(taskId) {
+  const task = Notifier.tasks(taskId);
+  const [, , , , sender] = task;
+
+  if (Notifier.doNotAutoRefund(sender) === true) {
+    console.log(`Do not auto refund is on for ${sender}`);
+    return;
+  }
+
+  return Notifier.returnFund(sender, 0, {
+    from: getAddress(config.get('provider.ethereum.adminAccount')),
+    gas: 1000000,
+  }, err => {
+    if (err) {
+      console.log(err);
+    }
+    console.log('returnFund');
+  });
+}
+
 Notifier.TaskUpdated().watch((err, event) => {
   if (err || !event.args.taskId || !event.args.state) {
     console.log(err);
@@ -71,12 +91,12 @@ Notifier.TaskUpdated().watch((err, event) => {
 
   if (state === 10) { // pending, send the message
     processPendingTask(event.args.taskId);
-  } else if (state === 50) { // processed, costing done, tx settled
+  } else if (state === 50) { // settled
     console.log(`[Event] Task ID: ${event.args.taskId} is settled.`);
+    processRefund(event.args.taskId);
   }
 
   return true;
 });
 
 setCheckStatusesTimer(3000);
-
