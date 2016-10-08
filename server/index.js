@@ -19,11 +19,11 @@ console.log(`Admin (manager) account: ${getAddress(config.get('provider.ethereum
 
 function processPendingTask(id, attempt = 0) {
   const task = Notifier.tasks(id);
-  const [sender, state, isIPFS] = task;
+  const [sender, state, isxIPFS] = task;
 
   //let [xipfsHash, transport, destination, message, , txid] = task;
 
-  if (isIPFS) {
+  if (isxIPFS) {
     const xipfsHash = Notifier.xnotifications(id);
     console.log(`Getting IPFS hash ${xipfsHash}`);
     xipfs.get(xipfsHash).then(data => {
@@ -92,12 +92,13 @@ Notifier.TaskUpdated().watch((err, event) => {
   console.log(event);
 
   const state = event.args.state.toNumber();
+  const id = event.args.id.toNumber();
 
   if (state === 10) { // pending, send the message
-    processPendingTask(event.args.id);
+    processPendingTask(id);
   } else if (state === 50) { // settled
     console.log(`[Event] Task ID: ${event.args.id} is settled.`);
-    processRefund(event.args.id);
+    processRefund(id);
   }
 
   return true;

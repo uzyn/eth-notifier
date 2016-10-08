@@ -19,12 +19,11 @@ function settleTask(dbRow, usdPrice) {
   ethPrice = Math.ceil(ethPrice * 1000000) / 1000000;
   const weiPrice = web3.toWei(ethPrice, 'ether');
   const task = Notifier.tasks(dbRow.taskid);
-  const [, , , , userAddress] = task;
-  console.log(dbRow.txid, usdPrice, ethPrice, weiPrice, userAddress);
+  console.log(dbRow.id, usdPrice, ethPrice, weiPrice);
 
   const promises = [
     new Promise((resolve, reject) => {
-      Notifier.taskProcessedWithCosting(dbRow.txid, weiPrice, {
+      Notifier.taskProcessedWithCosting(dbRow.id, weiPrice, {
         from: getAddress(config.get('provider.ethereum.adminAccount')),
         gas: 1000000,
       }, err => {
@@ -37,7 +36,7 @@ function settleTask(dbRow, usdPrice) {
       });
     }),
 
-    db.setFinalPrice(dbRow.taskid, usdPrice, ethPrice),
+    db.setFinalPrice(dbRow.id, usdPrice, ethPrice),
   ];
 
   return Promise.all(promises);

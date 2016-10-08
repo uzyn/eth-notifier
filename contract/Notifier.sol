@@ -305,7 +305,7 @@ contract Notifier is withOwners, withAccounts {
                  // 50: processed, costing done, tx settled
                  // 60: rejected or error-ed, costing done, tx settled
 
-    bool isIPFS;  // true: IPFS-augmented call; false: on-chain call
+    bool isxIPFS;  // true: IPFS-augmented call (xIPFS); false: on-chain call
   }
 
   struct Notification {
@@ -356,7 +356,7 @@ contract Notifier is withOwners, withAccounts {
     tasks[id] = Task({
       sender: msg.sender,
       state: state,
-      isIPFS: false // on-chain
+      isxIPFS: false // on-chain
     });
 
     TaskUpdated(id, state);
@@ -380,7 +380,7 @@ contract Notifier is withOwners, withAccounts {
     tasks[id] = Task({
       sender: msg.sender,
       state: state,
-      isIPFS: true // IPFS
+      isxIPFS: true // IPFS
     });
 
     TaskUpdated(id, state);
