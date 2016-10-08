@@ -15,10 +15,19 @@ let checkingStatuses = false;
 let setCheckStatusesTimer = null;
 
 function settleTask(dbRow, usdPrice) {
+  const task = Notifier.tasks(dbRow.id);
+  const [sender] = task;
+
   let ethPrice = usdPrice / config.get('provider.ethUsd') * (1 + config.get('provider.pctMargin')) + config.get('provider.flatMarginInEth');
+
+  // Fee reduction if no auto refund
+  if (Notifier.doNotAutoRefund(sender)) {
+    ethPrice -= config.get('provider.noAutoRefundRefundInEth');
+  }
+
   ethPrice = Math.ceil(ethPrice * 1000000) / 1000000;
   const weiPrice = web3.toWei(ethPrice, 'ether');
-  const task = Notifier.tasks(dbRow.taskid);
+
   console.log(dbRow.id, usdPrice, ethPrice, weiPrice);
 
   const promises = [

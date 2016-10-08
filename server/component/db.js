@@ -13,8 +13,10 @@ db.serialize(() => {
     id INTEGER PRIMARY KEY,
     timestamp INTEGER,
     twilioSid TEXT,
-    twilioUSD NUMERIC,
+    usdTwilio NUMERIC,
+    ethTwilio NUMERIC,
     ethCharged NUMERIC,
+    ethUsd NUMERIC,
     awaitingStatus BOOL
   )`);
   db.run('CREATE INDEX IF NOT EXISTS awaitingStatusIdx ON sms(awaitingStatus)');
@@ -25,6 +27,7 @@ db.serialize(() => {
  * After a message is sent, but no pricing yet
  */
 function msgSent(id, twilioSid) {
+  const ethUsd = config.get('provider.ethUsd');
   return new Promise((resolve, reject) => {
     db.run(`INSERT INTO sms VALUES (
       ${id},
@@ -32,6 +35,8 @@ function msgSent(id, twilioSid) {
       '${twilioSid}',
       0,
       0,
+      0,
+      ${ethUsd},
       1
     );`, (err, data) => {
       if (err) {
@@ -46,10 +51,14 @@ function msgSent(id, twilioSid) {
  * Obtained prices, update table
  * Note: this does not deal with ETH refund
  */
-function setFinalPrice(id, twilioUSD, ethCharged) {
+function setFinalPrice(id, usdTwilio, ethCharged) {
+  const ethUsd = config.get('provider.ethUsd');
+  const ethTwilio = Math.ceil(usdTwilio / ethUsd * 1000000) / 1000000;
+
   return new Promise((resolve, reject) => {
     db.run(`UPDATE sms SET
-      twilioUSD = ${twilioUSD},
+      usdTwilio = ${usdTwilio},
+      ethTwilio = ${ethTwilio},
       ethCharged = ${ethCharged},
       awaitingStatus = 0
     WHERE id = ${id};`, (err, data) => {
