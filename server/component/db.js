@@ -10,31 +10,33 @@ const db = new sqlite3.Database(config.get('provider.sqliteDatabase').replace('{
 
 db.serialize(() => {
   db.run(`CREATE TABLE IF NOT EXISTS sms (
-    taskid INTEGER PRIMARY KEY,
+    id INTEGER PRIMARY KEY,
     timestamp INTEGER,
-    txid INTEGER,
     twilioSid TEXT,
-    twilioUSD NUMERIC,
+    usdTwilio NUMERIC,
+    ethTwilio NUMERIC,
     ethCharged NUMERIC,
+    ethUsd NUMERIC,
     awaitingStatus BOOL
   )`);
   db.run('CREATE INDEX IF NOT EXISTS awaitingStatusIdx ON sms(awaitingStatus)');
   db.run('CREATE INDEX IF NOT EXISTS twilioSidIdx ON sms(twilioSid)');
-  db.run('CREATE INDEX IF NOT EXISTS txidIdx ON sms(txid)');
 });
 
 /**
  * After a message is sent, but no pricing yet
  */
-function msgSent(taskid, txid, twilioSid) {
+function msgSent(id, twilioSid) {
+  const ethUsd = config.get('provider.ethUsd');
   return new Promise((resolve, reject) => {
     db.run(`INSERT INTO sms VALUES (
-      ${taskid},
+      ${id},
       ${Date.now()},
-      ${txid},
       '${twilioSid}',
       0,
       0,
+      0,
+      ${ethUsd},
       1
     );`, (err, data) => {
       if (err) {
@@ -49,13 +51,17 @@ function msgSent(taskid, txid, twilioSid) {
  * Obtained prices, update table
  * Note: this does not deal with ETH refund
  */
-function setFinalPrice(taskid, twilioUSD, ethCharged) {
+function setFinalPrice(id, usdTwilio, ethCharged) {
+  const ethUsd = config.get('provider.ethUsd');
+  const ethTwilio = Math.ceil(usdTwilio / ethUsd * 1000000) / 1000000;
+
   return new Promise((resolve, reject) => {
     db.run(`UPDATE sms SET
-      twilioUSD = ${twilioUSD},
+      usdTwilio = ${usdTwilio},
+      ethTwilio = ${ethTwilio},
       ethCharged = ${ethCharged},
       awaitingStatus = 0
-    WHERE taskid = ${taskid};`, (err, data) => {
+    WHERE id = ${id};`, (err, data) => {
       if (err) {
         return reject(err);
       }

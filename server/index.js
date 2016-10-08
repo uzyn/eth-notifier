@@ -17,11 +17,14 @@ console.log('\n[ ETH Notifier ]');
 console.log(`Watching smart contract at ${Notifier.address}`);
 console.log(`Admin (manager) account: ${getAddress(config.get('provider.ethereum.adminAccount'))}`);
 
-function processPendingTask(taskId, attempt = 0) {
-  const task = Notifier.tasks(taskId);
-  let [xipfsHash, transport, destination, message, , txid] = task;
+function processPendingTask(id, attempt = 0) {
+  const task = Notifier.tasks(id);
+  const [sender, state, isxIPFS] = task;
 
-  if (xipfsHash) {
+  //let [xipfsHash, transport, destination, message, , txid] = task;
+
+  if (isxIPFS) {
+    const xipfsHash = Notifier.xnotifications(id);
     console.log(`Getting IPFS hash ${xipfsHash}`);
     xipfs.get(xipfsHash).then(data => {
       let callParams = data;
@@ -29,10 +32,10 @@ function processPendingTask(taskId, attempt = 0) {
         callParams = xdecrypt(data);
       }
 
-      [transport, destination, message] = callParams;
+      const [transport, destination, message] = callParams;
       if (parseInt(transport, 10) === 1) {
         sms.send(destination, message).then(twilioData =>
-          db.msgSent(taskId, txid, twilioData.sid)
+          db.msgSent(id, twilioData.sid)
         ).then(() => {
           console.log(`Message sent to ${destination}.`);
           setCheckStatusesTimer(3000);
@@ -42,14 +45,15 @@ function processPendingTask(taskId, attempt = 0) {
       if (attempt <= 10) {
         console.log(`Attempt ${attempt}: Retry xipfs in 10 secs`);
         setTimeout(() => {
-          processPendingTask(taskId, attempt + 1);
+          processPendingTask(id, attempt + 1);
         }, 10000);
       }
     });
   } else {
+    const [transport, destination, message] = Notifier.notifications(id);
     if (parseInt(transport, 10) === 1) {
       sms.send(destination, message).then(twilioData =>
-        db.msgSent(taskId, txid, twilioData.sid)
+        db.msgSent(id, twilioData.sid)
       ).then(() => {
         console.log(`Message sent to ${destination}.`);
         setCheckStatusesTimer(3000);
@@ -58,9 +62,9 @@ function processPendingTask(taskId, attempt = 0) {
   }
 }
 
-function processRefund(taskId) {
-  const task = Notifier.tasks(taskId);
-  const [, , , , sender] = task;
+function processRefund(id) {
+  const task = Notifier.tasks(id);
+  const [sender] = task;
 
   if (Notifier.doNotAutoRefund(sender) === true) {
     console.log(`Do not auto refund is on for ${sender}`);
@@ -79,7 +83,7 @@ function processRefund(taskId) {
 }
 
 Notifier.TaskUpdated().watch((err, event) => {
-  if (err || !event.args.taskId || !event.args.state) {
+  if (err || !event.args.id || !event.args.state) {
     console.log(err);
     return false;
   }
@@ -88,12 +92,13 @@ Notifier.TaskUpdated().watch((err, event) => {
   console.log(event);
 
   const state = event.args.state.toNumber();
+  const id = event.args.id.toNumber();
 
   if (state === 10) { // pending, send the message
-    processPendingTask(event.args.taskId);
+    processPendingTask(id);
   } else if (state === 50) { // settled
-    console.log(`[Event] Task ID: ${event.args.taskId} is settled.`);
-    processRefund(event.args.taskId);
+    console.log(`[Event] Task ID: ${event.args.id} is settled.`);
+    processRefund(id);
   }
 
   return true;

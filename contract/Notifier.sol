@@ -1,5 +1,10 @@
 pragma solidity ^0.4.0;
 
+/**
+ * ----------------
+ * Application-agnostic user permission (owner, manager) contract
+ * ----------------
+ */
 contract withOwners {
   uint8 public ownersCount = 0;
   uint8 public managersCount = 0;
@@ -63,11 +68,15 @@ contract withOwners {
   }
 }
 
+/**
+ * ----------------
+ * Application-agnostic user account contract
+ * ----------------
+ */
 contract withAccounts is withOwners {
   uint defaultTimeoutPeriod = 1 days; // if locked fund is not settled within timeout period, account holders can refund themselves
 
   struct AccountTx {
-    uint32 txid;
     uint timeCreated;
     address user;
     uint128 amountHeld;
@@ -75,7 +84,6 @@ contract withAccounts is withOwners {
     uint8 state; // 1: on-hold/locked; 2: processed and refunded;
   }
 
-  uint32 public txCount = 0;
   mapping (uint32 => AccountTx) public accountTxs;
   //mapping (address => uint) public userTxs;
 
@@ -141,15 +149,18 @@ contract withAccounts is withOwners {
    * can be called by anyone, not only account owner or provider
    * If an AccountTx is already timed out, return balance to the user's available balance.
    */
-  function checkTimeout(uint32 _txid) public {
+  function checkTimeout(uint32 _id) public {
     if (
-      accountTxs[_txid].state != 1 ||
-      (now - accountTxs[_txid].timeCreated) < defaultTimeoutPeriod
+      accountTxs[_id].state != 1 ||
+      (now - accountTxs[_id].timeCreated) < defaultTimeoutPeriod
     ) {
       throw;
     }
 
-    settle(_txid, 0); // no money is spent, settle the tx
+    settle(_id, 0); // no money is spent, settle the tx
+
+    // Specifically for Notification contract
+    // updateState(_id, 60, 0);
   }
 
   /**
@@ -168,7 +179,7 @@ contract withAccounts is withOwners {
    */
   function updateDefaultTimeoutPeriod(uint _defaultTimeoutPeriod) public onlyOwners {
     if (_defaultTimeoutPeriod < 1 hours) {
-      _defaultTimeoutPeriod = 1 hours;
+      throw;
     }
 
     defaultTimeoutPeriod = _defaultTimeoutPeriod;
@@ -234,81 +245,84 @@ contract withAccounts is withOwners {
   /**
    * Creates a transaction
    */
-  function createTx(address _user, uint128 _amount) internal returns (uint32 txid) {
+  function createTx(uint32 _id, address _user, uint128 _amount) internal {
     if (_amount > availableBalances[_user]) {
       throw;
     }
 
-    txid = txCount;
-    accountTxs[txid] = AccountTx({
-      txid: txid,
+    accountTxs[_id] = AccountTx({
       timeCreated: now,
       user: _user,
       amountHeld: _amount,
       amountSpent: 0,
       state: 1 // on hold
     });
-    //userTxs[_user] = txid;
-    ++txCount;
 
     availableBalances[_user] -= _amount;
     availableBalance -= _amount;
 
     onholdBalances[_user] += _amount;
     onholdBalance += _amount;
-
-    return txid;
   }
 
-  function settle(uint32 _txid, uint128 _amountSpent) internal {
-    if (accountTxs[_txid].state != 1 || _amountSpent > accountTxs[_txid].amountHeld) {
+  function settle(uint32 _id, uint128 _amountSpent) internal {
+    if (accountTxs[_id].state != 1 || _amountSpent > accountTxs[_id].amountHeld) {
       throw;
     }
 
     // Deliberately not checking for timeout period
     // because if provider has actual update, it should stand
 
-    accountTxs[_txid].amountSpent = _amountSpent;
-    accountTxs[_txid].state = 2; // processed and refunded;
+    accountTxs[_id].amountSpent = _amountSpent;
+    accountTxs[_id].state = 2; // processed and refunded;
 
     spentBalance += _amountSpent;
 
-    onholdBalances[accountTxs[_txid].user] -= accountTxs[_txid].amountHeld;
-    onholdBalance -= accountTxs[_txid].amountHeld;
+    onholdBalances[accountTxs[_id].user] -= accountTxs[_id].amountHeld;
+    onholdBalance -= accountTxs[_id].amountHeld;
 
-    uint changeAmount = accountTxs[_txid].amountHeld - _amountSpent;
-    availableBalances[accountTxs[_txid].user] += changeAmount;
+    uint changeAmount = accountTxs[_id].amountHeld - _amountSpent;
+    availableBalances[accountTxs[_id].user] += changeAmount;
     availableBalance += changeAmount;
   }
 }
+
+
+/**
+ * ----------------
+ * Application contract
+ * ----------------
+ */
 contract Notifier is withOwners, withAccounts {
   string public xIPFSPublicKey;
   uint128 public minEthPerNotification = 0.02 ether;
 
   struct Task {
-    string xipfs; // Hash for IPFS-augmented calls
-
-    // Augmentable parameters
-    uint8 transport; // 1: sms, 2: email
-    string destination;
-    string message;
-
     address sender;
-    uint32 txid; // AccountTxid (dealing with payment)
     uint8 state; // 10: pending
                  // 20: processed, but tx still open
                  // [ FINAL STATES >= 50 ]
                  // 50: processed, costing done, tx settled
                  // 60: rejected or error-ed, costing done, tx settled
+
+    bool isxIPFS;  // true: IPFS-augmented call (xIPFS); false: on-chain call
+  }
+
+  struct Notification {
+    uint8 transport; // 1: sms, 2: email
+    string destination;
+    string message;
   }
 
   mapping(uint32 => Task) public tasks;
+  mapping(uint32 => Notification) public notifications;
+  mapping(uint32 => string) public xnotifications; // IPFS-augmented Notification (hash)
   uint32 public tasksCount = 0;
 
   /**
    * Events to be picked up by API
    */
-  event TaskUpdated(uint32 taskId, uint8 state);
+  event TaskUpdated(uint32 id, uint8 state);
 
   function Notifier(string _xIPFSPublicKey) public {
     xIPFSPublicKey = _xIPFSPublicKey;
@@ -325,28 +339,28 @@ contract Notifier is withOwners, withAccounts {
   /**
    * Sends out notification
    */
-  function notify(uint8 _transport, string _destination, string _message) public payable handleDeposit returns (uint32 txid) {
+  function notify(uint8 _transport, string _destination, string _message) public payable handleDeposit {
     if (_transport != 1 && _transport != 2) {
       throw;
     }
 
-    txid = createTx(msg.sender, minEthPerNotification);
-
     uint32 id = tasksCount;
-    tasks[id] = Task({
-      xipfs: '',
-      transport: _transport, // 1: sms, 2: email
+    uint8 state = 10; // pending
+
+    createTx(id, msg.sender, minEthPerNotification);
+    notifications[id] = Notification({
+      transport: _transport,
       destination: _destination,
-      message: _message,
-
-      sender: msg.sender,
-      txid: txid,
-      state: 10, // pending
+      message: _message
     });
-    TaskUpdated(id, 10);
-    ++tasksCount;
+    tasks[id] = Task({
+      sender: msg.sender,
+      state: state,
+      isxIPFS: false // on-chain
+    });
 
-    return txid;
+    TaskUpdated(id, state);
+    ++tasksCount;
   }
 
 /**
@@ -357,24 +371,20 @@ contract Notifier is withOwners, withAccounts {
  * --------------
  */
 
-  function xnotify(string _hash) public payable handleDeposit returns (uint32 txid) {
-    txid = createTx(msg.sender, minEthPerNotification);
-
+  function xnotify(string _hash) public payable handleDeposit {
     uint32 id = tasksCount;
+    uint8 state = 10; // pending
+
+    createTx(id, msg.sender, minEthPerNotification);
+    xnotifications[id] = _hash;
     tasks[id] = Task({
-      xipfs: _hash,
-      transport: 1, // sms
-      destination: '',
-      message: '',
-
       sender: msg.sender,
-      txid: txid,
-      state: 10, // pending
+      state: state,
+      isxIPFS: true // IPFS
     });
-    TaskUpdated(id, 10);
-    ++tasksCount;
 
-    return txid;
+    TaskUpdated(id, state);
+    ++tasksCount;
   }
 
 /**
@@ -391,24 +401,24 @@ contract Notifier is withOwners, withAccounts {
    * Mark task as processed, but no costing yet
    * This is an optional state
    */
-  function taskProcessedNoCosting(uint32 _taskId) public onlyManagers {
-    updateState(_taskId, 20, 0);
+  function taskProcessedNoCosting(uint32 _id) public onlyManagers {
+    updateState(_id, 20, 0);
   }
 
   /**
    * Mark task as processed, and process funds + costings
    * This is a FINAL state
    */
-  function taskProcessedWithCosting(uint32 _taskId, uint128 _cost) public onlyManagers {
-    updateState(_taskId, 50, _cost);
+  function taskProcessedWithCosting(uint32 _id, uint128 _cost) public onlyManagers {
+    updateState(_id, 50, _cost);
   }
 
   /**
    * Mark task as rejected or error-ed,  and processed funds + costings
    * This is a FINAL state
    */
-  function taskRejected(uint32 _taskId, uint128 _cost) public onlyManagers {
-    updateState(_taskId, 60, _cost);
+  function taskRejected(uint32 _id, uint128 _cost) public onlyManagers {
+    updateState(_id, 60, _cost);
   }
 
   /**
@@ -418,18 +428,18 @@ contract Notifier is withOwners, withAccounts {
     xIPFSPublicKey = _publicKey;
   }
 
-  function updateState(uint32 _taskId, uint8 _state, uint128 _cost) private {
-    if (tasks[_taskId].state == 0 || tasks[_taskId].state >= 50) {
+  function updateState(uint32 _id, uint8 _state, uint128 _cost) private {
+    if (tasks[_id].state == 0 || tasks[_id].state >= 50) {
       throw;
     }
 
-    tasks[_taskId].state = _state;
+    tasks[_id].state = _state;
 
     // Cost settlement is done only for final states (>= 50)
     if (_state >= 50) {
-      settle(tasks[_taskId].txid, _cost);
+      settle(_id, _cost);
     }
-    TaskUpdated(_taskId, _state);
+    TaskUpdated(_id, _state);
   }
 
   /**

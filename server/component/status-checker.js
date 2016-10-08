@@ -14,17 +14,25 @@ let checkingStatuses = false;
 // function declaration (get around JSLint's no use before declare
 let setCheckStatusesTimer = null;
 
-function processRefund(dbRow, usdPrice) {
+function settleTask(dbRow, usdPrice) {
+  const task = Notifier.tasks(dbRow.id);
+  const [sender] = task;
+
   let ethPrice = usdPrice / config.get('provider.ethUsd') * (1 + config.get('provider.pctMargin')) + config.get('provider.flatMarginInEth');
+
+  // Fee reduction if no auto refund
+  if (Notifier.doNotAutoRefund(sender)) {
+    ethPrice -= config.get('provider.noAutoRefundRefundInEth');
+  }
+
   ethPrice = Math.ceil(ethPrice * 1000000) / 1000000;
   const weiPrice = web3.toWei(ethPrice, 'ether');
-  const task = Notifier.tasks(dbRow.taskid);
-  const [, , , , userAddress] = task;
-  console.log(dbRow.txid, usdPrice, ethPrice, weiPrice, userAddress);
+
+  console.log(dbRow.id, usdPrice, ethPrice, weiPrice);
 
   const promises = [
     new Promise((resolve, reject) => {
-      Notifier.taskProcessedWithCosting(dbRow.txid, weiPrice, {
+      Notifier.taskProcessedWithCosting(dbRow.id, weiPrice, {
         from: getAddress(config.get('provider.ethereum.adminAccount')),
         gas: 1000000,
       }, err => {
@@ -37,7 +45,7 @@ function processRefund(dbRow, usdPrice) {
       });
     }),
 
-    db.setFinalPrice(dbRow.taskid, usdPrice, ethPrice),
+    db.setFinalPrice(dbRow.id, usdPrice, ethPrice),
   ];
 
   return Promise.all(promises);
@@ -65,7 +73,7 @@ function checkStatuses() {
         if (isNaN(priceUsd)) {
           priceUsd = 0;
         }
-        promises.push(processRefund(dbRow, priceUsd));
+        promises.push(settleTask(dbRow, priceUsd));
       }
     });
 
