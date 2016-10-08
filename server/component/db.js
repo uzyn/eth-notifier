@@ -4,10 +4,9 @@
  */
 const config = require('config');
 const sqlite3 = require('sqlite3');
-const { web3 } = require('../../contract/.deployed');
+const { web3, Notifier } = require('../../contract/.deployed');
 
-const GENESISHASH = web3.eth.getBlock(0).hash.slice(-10);
-const db = new sqlite3.Database(config.get('provider.sqliteDatabase').replace('{GENESISHASH}', GENESISHASH));
+const db = new sqlite3.Database(config.get('provider.sqliteDatabase').replace('{CONTRACT_ADDRESS}', Notifier.address.slice(0, 10)));
 
 db.serialize(() => {
   db.run(`CREATE TABLE IF NOT EXISTS sms (
