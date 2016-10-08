@@ -14,7 +14,7 @@ let checkingStatuses = false;
 // function declaration (get around JSLint's no use before declare
 let setCheckStatusesTimer = null;
 
-function processRefund(dbRow, usdPrice) {
+function settleTask(dbRow, usdPrice) {
   let ethPrice = usdPrice / config.get('provider.ethUsd') * (1 + config.get('provider.pctMargin')) + config.get('provider.flatMarginInEth');
   ethPrice = Math.ceil(ethPrice * 1000000) / 1000000;
   const weiPrice = web3.toWei(ethPrice, 'ether');
@@ -65,7 +65,7 @@ function checkStatuses() {
         if (isNaN(priceUsd)) {
           priceUsd = 0;
         }
-        promises.push(processRefund(dbRow, priceUsd));
+        promises.push(settleTask(dbRow, priceUsd));
       }
     });
 
