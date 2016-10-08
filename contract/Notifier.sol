@@ -245,12 +245,12 @@ contract withAccounts is withOwners {
   /**
    * Creates a transaction
    */
-  function createTx(uint32 id, address _user, uint128 _amount) internal {
+  function createTx(uint32 _id, address _user, uint128 _amount) internal {
     if (_amount > availableBalances[_user]) {
       throw;
     }
 
-    accountTxs[id] = AccountTx({
+    accountTxs[_id] = AccountTx({
       timeCreated: now,
       user: _user,
       amountHeld: _amount,
