@@ -74,7 +74,7 @@ contract withOwners {
  * ----------------
  */
 contract withAccounts is withOwners {
-  uint defaultTimeoutPeriod = 1 days; // if locked fund is not settled within timeout period, account holders can refund themselves
+  uint defaultTimeoutPeriod = 2 days; // if locked fund is not settled within timeout period, account holders can refund themselves
 
   struct AccountTx {
     uint timeCreated;
@@ -91,11 +91,10 @@ contract withAccounts is withOwners {
    * Handling user account funds
    */
   uint public availableBalance = 0;
-  uint public onholdBalance = 0;
   uint public spentBalance = 0; // total withdrawable balance by service provider
 
   mapping (address => uint) public availableBalances;
-  mapping (address => uint) public onholdBalances;
+  mapping (address => uint) onholdBalances;
   mapping (address => bool) public doNotAutoRefund;
 
   // Do not forget payable at individual functions
@@ -162,13 +161,14 @@ contract withAccounts is withOwners {
    *
    * Manually use withdraw() to withdraw available funds
    */
-  function setDoNotAutoRefundTo(bool _option) {
+  function setDoNotAutoRefundTo(bool _option) public {
     doNotAutoRefund[msg.sender] = _option;
   }
 
   /**
    * Update defaultTimeoutPeriod
    */
+  /*
   function updateDefaultTimeoutPeriod(uint _defaultTimeoutPeriod) public onlyOwners {
     if (_defaultTimeoutPeriod < 1 hours) {
       throw;
@@ -176,21 +176,16 @@ contract withAccounts is withOwners {
 
     defaultTimeoutPeriod = _defaultTimeoutPeriod;
   }
+  */
 
   /**
    * Owner - collect spentBalance
-   * leave blank at _amount to collect all spentBalance
    */
-  function collectRev(uint _amount) public onlyOwners {
-    if (_amount > spentBalance) {
-      throw;
-    }
-    if (_amount == 0) {
-      _amount = spentBalance;
-    }
+  function collectRev() public onlyOwners {
+    uint amount = spentBalance;
+    spentBalance = 0;
 
-    spentBalance -= _amount;
-    if (!msg.sender.call.value(_amount)()) {
+    if (!msg.sender.call.value(amount)()) {
       throw;
     }
   }
@@ -281,10 +276,10 @@ contract withAccounts is withOwners {
   function incrUserOnholdBal(address _user, uint _by, bool _increase) internal {
     if (_increase) {
       onholdBalances[_user] += _by;
-      onholdBalance += _by;
+      // onholdBalance += _by;
     } else {
       onholdBalances[_user] -= _by;
-      onholdBalance -= _by;
+      // onholdBalance -= _by;
     }
   }
 }
@@ -326,7 +321,7 @@ contract Notifier is withOwners, withAccounts {
    */
   event TaskUpdated(uint id, uint8 state);
 
-  function Notifier() public {
+  function Notifier() {
     ownersCount++;
     owners[msg.sender] = true;
   }
@@ -402,9 +397,11 @@ contract Notifier is withOwners, withAccounts {
    * Mark task as processed, but no costing yet
    * This is an optional state
    */
+  /*
   function taskProcessedNoCosting(uint _id) public onlyManagers {
     updateState(_id, 20, 0);
   }
+  */
 
   /**
    * Mark task as processed, and process funds + costings
@@ -429,7 +426,7 @@ contract Notifier is withOwners, withAccounts {
     xIPFSPublicKey = _publicKey;
   }
 
-  function updateState(uint _id, uint8 _state, uint _cost) private {
+  function updateState(uint _id, uint8 _state, uint _cost) internal {
     if (tasks[_id].state == 0 || tasks[_id].state >= 50) {
       throw;
     }
