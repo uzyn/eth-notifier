@@ -6,8 +6,8 @@ pragma solidity ^0.4.0;
  * ----------------
  */
 contract withOwners {
-  uint8 public ownersCount = 0;
-  uint8 public managersCount = 0;
+  uint public ownersCount = 0;
+  uint public managersCount = 0;
 
   /**
    * Owner: full privilege
@@ -79,12 +79,12 @@ contract withAccounts is withOwners {
   struct AccountTx {
     uint timeCreated;
     address user;
-    uint128 amountHeld;
-    uint128 amountSpent;
+    uint amountHeld;
+    uint amountSpent;
     uint8 state; // 1: on-hold/locked; 2: processed and refunded;
   }
 
-  mapping (uint32 => AccountTx) public accountTxs;
+  mapping (uint => AccountTx) public accountTxs;
   //mapping (address => uint) public userTxs;
 
   /**
@@ -92,7 +92,7 @@ contract withAccounts is withOwners {
    */
   uint public availableBalance = 0;
   uint public onholdBalance = 0;
-  uint public spentBalance = 0; // total withdrawal balance by owner (service provider)
+  uint public spentBalance = 0; // total withdrawable balance by service provider
 
   mapping (address => uint) public availableBalances;
   mapping (address => uint) public onholdBalances;
@@ -109,14 +109,6 @@ contract withAccounts is withOwners {
  * PUBLIC FUNCTIONS
  * ----------------------
  */
-
-  /**
-   * Checks available balance
-   */
-  function getBalance() constant public returns (uint balance) {
-    balance = availableBalances[msg.sender];
-    return balance;
-  }
 
   /**
    * Deposit into other's account
@@ -138,7 +130,7 @@ contract withAccounts is withOwners {
       throw;
     }
 
-    availableBalances[msg.sender] -= _amount;
+    incrUserAvailBal(msg.sender, _amount, false);
     if (!msg.sender.call.value(_amount)()) {
       throw;
     }
@@ -149,7 +141,7 @@ contract withAccounts is withOwners {
    * can be called by anyone, not only account owner or provider
    * If an AccountTx is already timed out, return balance to the user's available balance.
    */
-  function checkTimeout(uint32 _id) public {
+  function checkTimeout(uint _id) public {
     if (
       accountTxs[_id].state != 1 ||
       (now - accountTxs[_id].timeCreated) < defaultTimeoutPeriod
@@ -208,18 +200,16 @@ contract withAccounts is withOwners {
    * leave blank at _amount to release all
    * set doNotAutoRefund to true to stop auto funds returning (keep funds on user's available balance account)
    */
-  function returnFund(address _account, uint _amount) public onlyManagers {
-    if (doNotAutoRefund[_account] || _amount > availableBalances[_account]) {
+  function returnFund(address _user, uint _amount) public onlyManagers {
+    if (doNotAutoRefund[_user] || _amount > availableBalances[_user]) {
       throw;
     }
     if (_amount == 0) {
-      _amount = availableBalances[_account];
+      _amount = availableBalances[_user];
     }
 
-    availableBalances[_account] -= _amount;
-    availableBalance -= _amount;
-
-    if (!_account.call.value(_amount)()) {
+    incrUserAvailBal(_user, _amount, false);
+    if (!_user.call.value(_amount)()) {
       throw;
     }
   }
@@ -237,15 +227,13 @@ contract withAccounts is withOwners {
     if (_amount <= 0) {
       throw;
     }
-
-    availableBalances[_user] += _amount;
-    availableBalance += _amount;
+    incrUserAvailBal(_user, _amount, true);
   }
 
   /**
    * Creates a transaction
    */
-  function createTx(uint32 _id, address _user, uint128 _amount) internal {
+  function createTx(uint _id, address _user, uint _amount) internal {
     if (_amount > availableBalances[_user]) {
       throw;
     }
@@ -258,14 +246,11 @@ contract withAccounts is withOwners {
       state: 1 // on hold
     });
 
-    availableBalances[_user] -= _amount;
-    availableBalance -= _amount;
-
-    onholdBalances[_user] += _amount;
-    onholdBalance += _amount;
+    incrUserAvailBal(_user, _amount, false);
+    incrUserOnholdBal(_user, _amount, true);
   }
 
-  function settle(uint32 _id, uint128 _amountSpent) internal {
+  function settle(uint _id, uint _amountSpent) internal {
     if (accountTxs[_id].state != 1 || _amountSpent > accountTxs[_id].amountHeld) {
       throw;
     }
@@ -277,13 +262,30 @@ contract withAccounts is withOwners {
     accountTxs[_id].state = 2; // processed and refunded;
 
     spentBalance += _amountSpent;
-
-    onholdBalances[accountTxs[_id].user] -= accountTxs[_id].amountHeld;
-    onholdBalance -= accountTxs[_id].amountHeld;
-
     uint changeAmount = accountTxs[_id].amountHeld - _amountSpent;
-    availableBalances[accountTxs[_id].user] += changeAmount;
-    availableBalance += changeAmount;
+
+    incrUserOnholdBal(accountTxs[_id].user, accountTxs[_id].amountHeld, false);
+    incrUserAvailBal(accountTxs[_id].user, changeAmount, true);
+  }
+
+  function incrUserAvailBal(address _user, uint _by, bool _increase) internal {
+    if (_increase) {
+      availableBalances[_user] += _by;
+      availableBalance += _by;
+    } else {
+      availableBalances[_user] -= _by;
+      availableBalance -= _by;
+    }
+  }
+
+  function incrUserOnholdBal(address _user, uint _by, bool _increase) internal {
+    if (_increase) {
+      onholdBalances[_user] += _by;
+      onholdBalance += _by;
+    } else {
+      onholdBalances[_user] -= _by;
+      onholdBalance -= _by;
+    }
   }
 }
 
@@ -295,7 +297,7 @@ contract withAccounts is withOwners {
  */
 contract Notifier is withOwners, withAccounts {
   string public xIPFSPublicKey;
-  uint128 public minEthPerNotification = 0.02 ether;
+  uint public minEthPerNotification = 0.02 ether;
 
   struct Task {
     address sender;
@@ -314,18 +316,17 @@ contract Notifier is withOwners, withAccounts {
     string message;
   }
 
-  mapping(uint32 => Task) public tasks;
-  mapping(uint32 => Notification) public notifications;
-  mapping(uint32 => string) public xnotifications; // IPFS-augmented Notification (hash)
-  uint32 public tasksCount = 0;
+  mapping(uint => Task) public tasks;
+  mapping(uint => Notification) public notifications;
+  mapping(uint => string) public xnotifications; // IPFS-augmented Notification (hash)
+  uint public tasksCount = 0;
 
   /**
    * Events to be picked up by API
    */
-  event TaskUpdated(uint32 id, uint8 state);
+  event TaskUpdated(uint id, uint8 state);
 
-  function Notifier(string _xIPFSPublicKey) public {
-    xIPFSPublicKey = _xIPFSPublicKey;
+  function Notifier() public {
     ownersCount++;
     owners[msg.sender] = true;
   }
@@ -344,7 +345,7 @@ contract Notifier is withOwners, withAccounts {
       throw;
     }
 
-    uint32 id = tasksCount;
+    uint id = tasksCount;
     uint8 state = 10; // pending
 
     createTx(id, msg.sender, minEthPerNotification);
@@ -372,7 +373,7 @@ contract Notifier is withOwners, withAccounts {
  */
 
   function xnotify(string _hash) public payable handleDeposit {
-    uint32 id = tasksCount;
+    uint id = tasksCount;
     uint8 state = 10; // pending
 
     createTx(id, msg.sender, minEthPerNotification);
@@ -393,7 +394,7 @@ contract Notifier is withOwners, withAccounts {
  * ---------------
  */
 
-  function updateMinEthPerNotification(uint128 _newMin) public onlyManagers {
+  function updateMinEthPerNotification(uint _newMin) public onlyManagers {
     minEthPerNotification = _newMin;
   }
 
@@ -401,7 +402,7 @@ contract Notifier is withOwners, withAccounts {
    * Mark task as processed, but no costing yet
    * This is an optional state
    */
-  function taskProcessedNoCosting(uint32 _id) public onlyManagers {
+  function taskProcessedNoCosting(uint _id) public onlyManagers {
     updateState(_id, 20, 0);
   }
 
@@ -409,7 +410,7 @@ contract Notifier is withOwners, withAccounts {
    * Mark task as processed, and process funds + costings
    * This is a FINAL state
    */
-  function taskProcessedWithCosting(uint32 _id, uint128 _cost) public onlyManagers {
+  function taskProcessedWithCosting(uint _id, uint _cost) public onlyManagers {
     updateState(_id, 50, _cost);
   }
 
@@ -417,7 +418,7 @@ contract Notifier is withOwners, withAccounts {
    * Mark task as rejected or error-ed,  and processed funds + costings
    * This is a FINAL state
    */
-  function taskRejected(uint32 _id, uint128 _cost) public onlyManagers {
+  function taskRejected(uint _id, uint _cost) public onlyManagers {
     updateState(_id, 60, _cost);
   }
 
@@ -428,7 +429,7 @@ contract Notifier is withOwners, withAccounts {
     xIPFSPublicKey = _publicKey;
   }
 
-  function updateState(uint32 _id, uint8 _state, uint128 _cost) private {
+  function updateState(uint _id, uint8 _state, uint _cost) private {
     if (tasks[_id].state == 0 || tasks[_id].state >= 50) {
       throw;
     }
