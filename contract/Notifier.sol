@@ -6,15 +6,15 @@ pragma solidity ^0.4.0;
  * ----------------
  */
 contract withOwners {
-  uint public ownersCount = 0;
-  uint public managersCount = 0;
+  uint ownersCount = 0;
+  uint managersCount = 0;
 
   /**
    * Owner: full privilege
    * Manager: lower privilege (set status, but not withdraw)
    */
-  mapping (address => bool) public owners;
-  mapping (address => bool) public managers;
+  mapping (address => bool) owners;
+  mapping (address => bool) managers;
 
   modifier onlyOwners {
     if (owners[msg.sender] != true) {
@@ -30,6 +30,7 @@ contract withOwners {
     _;
   }
 
+/*
   function addOwner(address _candidate) public onlyOwners {
     if (owners[_candidate] == true) {
       throw; // already owner
@@ -48,6 +49,7 @@ contract withOwners {
     owners[_candidate] = false;
     --ownersCount;
   }
+*/
 
   function addManager(address _candidate) public onlyOwners {
     if (managers[_candidate] == true) {
