@@ -1,6 +1,13 @@
+pragma solidity ^0.4.0;
+
+/**
+ * ----------------
+ * Application-agnostic user permission (owner, manager) contract
+ * ----------------
+ */
 contract withOwners {
-  uint8 public ownersCount = 0;
-  uint8 public managersCount = 0;
+  uint public ownersCount = 0;
+  uint public managersCount = 0;
 
   /**
    * Owner: full privilege
@@ -13,14 +20,14 @@ contract withOwners {
     if (owners[msg.sender] != true) {
       throw;
     }
-    _
+    _;
   }
 
   modifier onlyManagers {
     if (owners[msg.sender] != true && managers[msg.sender] != true) {
       throw;
     }
-    _
+    _;
   }
 
   function addOwner(address _candidate) public onlyOwners {
