@@ -13,8 +13,8 @@ module.exports = {
     sqliteDatabase: './serverdb-{CONTRACT_ADDRESS}.sqlite3',
     ethUsd: 12.5, // 1 ETH = ? USD
     pctMargin: 0.5, // % on top of cost - expressed in decimal
-    flatMarginInEth: 0.002, // to cover the gas price
-    noAutoRefundRefundInEth: 0.0004, // Don't charge this for flat margin without noAutoRefund
+    flatMarginInEth: 0.003, // to cover the gas price (150k gas, includ. refund)
+    noAutoRefundRefundInEth: 0.001, // Don't charge this for flat margin without (50k gas)noAutoRefund
 
     /**
      * Twilio account details

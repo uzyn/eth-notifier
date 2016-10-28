@@ -73,7 +73,7 @@ function processRefund(id) {
 
   return Notifier.returnFund(sender, 0, {
     from: getAddress(config.get('provider.ethereum.adminAccount')),
-    gas: 1000000,
+    gas: 50000,
   }, err => {
     if (err) {
       console.log(err);
