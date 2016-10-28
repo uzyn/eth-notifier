@@ -1,6 +1,74 @@
 pragma solidity ^0.4.0;
 
-import "./withOwners.sol";
+/**
+ * ----------------
+ * Application-agnostic user permission (owner, manager) contract
+ * ----------------
+ */
+contract withOwners {
+  uint ownersCount = 0;
+  uint managersCount = 0;
+
+  /**
+   * Owner: full privilege
+   * Manager: lower privilege (set status, but not withdraw)
+   */
+  mapping (address => bool) owners;
+  mapping (address => bool) managers;
+
+  modifier onlyOwners {
+    if (owners[msg.sender] != true) {
+      throw;
+    }
+    _;
+  }
+
+  modifier onlyManagers {
+    if (owners[msg.sender] != true && managers[msg.sender] != true) {
+      throw;
+    }
+    _;
+  }
+
+/*
+  function addOwner(address _candidate) public onlyOwners {
+    if (owners[_candidate] == true) {
+      throw; // already owner
+    }
+
+    owners[_candidate] = true;
+    ++ownersCount;
+  }
+
+  function removeOwner(address _candidate) public onlyOwners {
+    // Stop removing the only/last owner
+    if (ownersCount <= 1 || owners[_candidate] == false) {
+      throw;
+    }
+
+    owners[_candidate] = false;
+    --ownersCount;
+  }
+*/
+
+  function addManager(address _candidate) public onlyOwners {
+    if (managers[_candidate] == true) {
+      throw; // already manager
+    }
+
+    managers[_candidate] = true;
+    ++managersCount;
+  }
+
+  function removeManager(address _candidate) public onlyOwners {
+    if (managers[_candidate] == false) {
+      throw;
+    }
+
+    managers[_candidate] = false;
+    --managersCount;
+  }
+}
 
 /**
  * ----------------
@@ -18,7 +86,6 @@ contract withAccounts is withOwners {
     uint8 state; // 1: on-hold/locked; 2: processed and refunded;
   }
 
-  uint public txCount = 0;
   mapping (uint => AccountTx) public accountTxs;
   //mapping (address => uint) public userTxs;
 
@@ -26,13 +93,13 @@ contract withAccounts is withOwners {
    * Handling user account funds
    */
   uint public availableBalance = 0;
-  uint public onholdBalance = 0;
-  uint public spentBalance = 0; // total withdrawal balance by owner (service provider)
+  uint public spentBalance = 0; // total withdrawable balance by service provider
 
   mapping (address => uint) public availableBalances;
-  mapping (address => uint) public onholdBalances;
+  mapping (address => uint) onholdBalances;
   mapping (address => bool) public doNotAutoRefund;
 
+  // Do not forget payable at individual functions
   modifier handleDeposit {
     deposit(msg.sender, msg.value);
     _;
@@ -103,6 +170,7 @@ contract withAccounts is withOwners {
   /**
    * Update defaultTimeoutPeriod
    */
+  /*
   function updateDefaultTimeoutPeriod(uint _defaultTimeoutPeriod) public onlyOwners {
     if (_defaultTimeoutPeriod < 1 hours) {
       throw;
@@ -110,6 +178,7 @@ contract withAccounts is withOwners {
 
     defaultTimeoutPeriod = _defaultTimeoutPeriod;
   }
+  */
 
   /**
    * Owner - collect spentBalance
@@ -208,11 +277,173 @@ contract withAccounts is withOwners {
   function incrUserOnholdBal(address _user, uint _by, bool _increase) internal {
     if (_increase) {
       onholdBalances[_user] += _by;
-      onholdBalance += _by;
+      // onholdBalance += _by;
     } else {
       onholdBalances[_user] -= _by;
-      onholdBalance -= _by;
+      // onholdBalance -= _by;
     }
   }
 }
 
+
+/**
+ * ----------------
+ * Application contract
+ * ----------------
+ */
+contract Notifier is withOwners, withAccounts {
+  string public xIPFSPublicKey;
+  uint public minEthPerNotification = 0.02 ether;
+
+  struct Task {
+    address sender;
+    uint8 state; // 10: pending
+                 // 20: processed, but tx still open
+                 // [ FINAL STATES >= 50 ]
+                 // 50: processed, costing done, tx settled
+                 // 60: rejected or error-ed, costing done, tx settled
+
+    bool isxIPFS;  // true: IPFS-augmented call (xIPFS); false: on-chain call
+  }
+
+  struct Notification {
+    uint8 transport; // 1: sms, 2: email
+    string destination;
+    string message;
+  }
+
+  mapping(uint => Task) public tasks;
+  mapping(uint => Notification) public notifications;
+  mapping(uint => string) public xnotifications; // IPFS-augmented Notification (hash)
+  uint public tasksCount = 0;
+
+  /**
+   * Events to be picked up by API
+   */
+  event TaskUpdated(uint id, uint8 state);
+
+  function Notifier() {
+    ownersCount++;
+    owners[msg.sender] = true;
+  }
+
+/**
+ * --------------
+ * Main functions
+ * --------------
+ */
+
+  /**
+   * Sends out notification
+   */
+  function notify(uint8 _transport, string _destination, string _message) public payable handleDeposit {
+    if (_transport != 1 && _transport != 2) {
+      throw;
+    }
+
+    uint id = tasksCount;
+    uint8 state = 10; // pending
+
+    createTx(id, msg.sender, minEthPerNotification);
+    notifications[id] = Notification({
+      transport: _transport,
+      destination: _destination,
+      message: _message
+    });
+    tasks[id] = Task({
+      sender: msg.sender,
+      state: state,
+      isxIPFS: false // on-chain
+    });
+
+    TaskUpdated(id, state);
+    ++tasksCount;
+  }
+
+/**
+ * --------------
+ * Extended functions, for
+ * - IPFS-augmented calls
+ * - Encrypted calls
+ * --------------
+ */
+
+  function xnotify(string _hash) public payable handleDeposit {
+    uint id = tasksCount;
+    uint8 state = 10; // pending
+
+    createTx(id, msg.sender, minEthPerNotification);
+    xnotifications[id] = _hash;
+    tasks[id] = Task({
+      sender: msg.sender,
+      state: state,
+      isxIPFS: true // IPFS
+    });
+
+    TaskUpdated(id, state);
+    ++tasksCount;
+  }
+
+/**
+ * --------------
+ * Owner-only functions
+ * ---------------
+ */
+
+  function updateMinEthPerNotification(uint _newMin) public onlyManagers {
+    minEthPerNotification = _newMin;
+  }
+
+  /**
+   * Mark task as processed, but no costing yet
+   * This is an optional state
+   */
+  /*
+  function taskProcessedNoCosting(uint _id) public onlyManagers {
+    updateState(_id, 20, 0);
+  }
+  */
+
+  /**
+   * Mark task as processed, and process funds + costings
+   * This is a FINAL state
+   */
+  function taskProcessedWithCosting(uint _id, uint _cost) public onlyManagers {
+    updateState(_id, 50, _cost);
+  }
+
+  /**
+   * Mark task as rejected or error-ed,  and processed funds + costings
+   * This is a FINAL state
+   */
+  function taskRejected(uint _id, uint _cost) public onlyManagers {
+    updateState(_id, 60, _cost);
+  }
+
+  /**
+   * Update public key for xIPFS
+   */
+  function updateXIPFSPublicKey(string _publicKey) public onlyOwners {
+    xIPFSPublicKey = _publicKey;
+  }
+
+  function updateState(uint _id, uint8 _state, uint _cost) internal {
+    if (tasks[_id].state == 0 || tasks[_id].state >= 50) {
+      throw;
+    }
+
+    tasks[_id].state = _state;
+
+    // Cost settlement is done only for final states (>= 50)
+    if (_state >= 50) {
+      settle(_id, _cost);
+    }
+    TaskUpdated(_id, _state);
+  }
+
+  /**
+   * Handle deposits
+   */
+  function () payable handleDeposit {
+  }
+}
